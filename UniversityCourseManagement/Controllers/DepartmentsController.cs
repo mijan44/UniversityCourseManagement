@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniversityCourseManagement.Data;
 using UniversityCourseManagement.Models;
+using UniversityCourseManagement.ViewModel;
 
 namespace UniversityCourseManagement.Controllers
 {
@@ -25,17 +26,22 @@ namespace UniversityCourseManagement.Controllers
 
 
 		[HttpPost]
-		public async Task<ActionResult<Department>> PostDepartment( Department department)
+		public async Task<ActionResult<Department>> PostDepartment( DepartmentViewModel departmentRequest)
 		{
-			if (_context.Departments.Any(d => d.Code == department.Code || d.Name==department.Name)) 
+			if (_context.Departments.Any(d => d.Code == departmentRequest.Code || d.Name==departmentRequest.Name)) 
 			{
 				return BadRequest("Department code or Name already exists");
 			}
 
+			var department = new Department();
+			department.ID = Guid.NewGuid();
+			department.Code = departmentRequest.Code;
+			department.Name = departmentRequest.Name;
+
 			_context.Departments.Add(department);
 			await _context.SaveChangesAsync();
 
-			return CreatedAtAction("GetDepartment", new { id = department.DepartmentID }, department);
+			return CreatedAtAction("GetDepartment", new { id = department.ID }, departmentRequest);
 
 		}
 
