@@ -4,7 +4,7 @@ namespace UniversityCourseManagement.Models
 {
 	public class Department
 	{
-		public Guid ID { get; set; }
+		public Guid Id { get; set; }
 		[Required]
 		[MaxLength(7)]
 		

@@ -3,6 +3,7 @@
 	public class DepartmentViewModel
 	{
         public string Code { get; set; }
-        public string Name { get; set; }    
-    }
+        public string Name { get; set; }
+		//public int ID { get; internal set; }
+	}
 }
