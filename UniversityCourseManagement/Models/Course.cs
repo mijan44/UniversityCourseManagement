@@ -20,7 +20,7 @@ namespace UniversityCourseManagement.Models
 		public double CourseCredit { get; set; }
 		public string CourseDescription { get; set; }
 		public Guid DepartmentID { get; set; }
-		public Department Department { get; set; }
+		public virtual Department Department { get; set; }
 		public Guid SemesterID { get; set; }
 		public Semester Semester { get; set; }
 	}
