@@ -1,4 +1,6 @@
-﻿namespace UniversityCourseManagement.ViewModel
+﻿using UniversityCourseManagement.Models;
+
+namespace UniversityCourseManagement.ViewModel
 {
 	public class CourseViewModel
 	{
@@ -6,6 +8,12 @@
 		public string CourseName { get; set; }
 		public double CourseCredit { get; set; }
 		public string CourseDescription { get; set; }
+		//
+		public virtual Department Department { get; set; }
+		public Guid SemesterID { get; set; }
+		public Semester Semester { get; set; }
+		public Guid DepartmentID { get; set; }
+
 
 	}
 }

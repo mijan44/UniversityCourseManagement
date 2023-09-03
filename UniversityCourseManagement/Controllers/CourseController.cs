@@ -40,6 +40,12 @@ namespace UniversityCourseManagement.Controllers
 			course.CourseName = courseRequest.CourseName;
 			course.CourseCredit = courseRequest.CourseCredit;
 			course.CourseDescription = courseRequest.CourseDescription;
+			//course.Semester = courseRequest.Semester;
+			//course.Department = courseRequest.Department;
+			course.DepartmentID = courseRequest.DepartmentID;
+			course.SemesterID = courseRequest.SemesterID;
+
+
 
 			_context.Courses.Add(course);
 			
