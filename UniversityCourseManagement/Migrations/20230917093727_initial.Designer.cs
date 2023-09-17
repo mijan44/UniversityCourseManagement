@@ -12,7 +12,7 @@ using UniversityCourseManagement.Data;
 namespace UniversityCourseManagement.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230825184513_initial")]
+    [Migration("20230917093727_initial")]
     partial class initial
     {
         /// <inheritdoc />
@@ -63,6 +63,34 @@ namespace UniversityCourseManagement.Migrations
                     b.ToTable("Courses");
                 });
 
+            modelBuilder.Entity("UniversityCourseManagement.Models.CourseAssignmentTeacher", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AssignedCredit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("RemainingCredit")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("TeacherId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("CourseAssignmentTeachers");
+                });
+
             modelBuilder.Entity("UniversityCourseManagement.Models.Department", b =>
                 {
                     b.Property<Guid>("Id")
@@ -102,12 +130,8 @@ namespace UniversityCourseManagement.Migrations
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("RegistrationNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("RegistrationNumber")
+                        .HasColumnType("int");
 
                     b.Property<string>("StudentAddress")
                         .IsRequired()
@@ -126,8 +150,6 @@ namespace UniversityCourseManagement.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DepartmentId");
 
                     b.ToTable("RegisterStudents");
                 });
@@ -205,7 +227,7 @@ namespace UniversityCourseManagement.Migrations
                     b.Navigation("Semester");
                 });
 
-            modelBuilder.Entity("UniversityCourseManagement.Models.RegisterStudent", b =>
+            modelBuilder.Entity("UniversityCourseManagement.Models.CourseAssignmentTeacher", b =>
                 {
                     b.HasOne("UniversityCourseManagement.Models.Department", "Department")
                         .WithMany()

@@ -12,6 +12,6 @@
 		public Guid DepartmentId { get; set; }	
 
 		public int CreditToBeTaken { get; set;}
-
+		
 	}
 }

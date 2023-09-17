@@ -94,12 +94,12 @@ namespace UniversityCourseManagement.Controllers
 		public async Task<IActionResult>DeleteDepartment(Guid id )
 		{
 			
-			var departyment = await _context.Departments.Where(x=>x.Id==id).FirstAsync();
-			if (departyment ==null)
+			var department = await _context.Departments.Where(x=>x.Id==id).FirstAsync();
+			if (department ==null)
 			{
 				return NotFound();
 			}
-			_context.Departments.Remove(departyment);
+			_context.Departments.Remove(department);
 
 			await _context.SaveChangesAsync();
 

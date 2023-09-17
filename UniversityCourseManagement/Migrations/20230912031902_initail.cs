@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace UniversityCourseManagement.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class initail : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,6 +37,28 @@ namespace UniversityCourseManagement.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Semesters", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CourseAssignmentTeachers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TeacherId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DepartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AssignedCredit = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    RemainingCredit = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseAssignmentTeachers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CourseAssignmentTeachers_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -117,6 +139,11 @@ namespace UniversityCourseManagement.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_CourseAssignmentTeachers_DepartmentId",
+                table: "CourseAssignmentTeachers",
+                column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Courses_DepartmentID",
                 table: "Courses",
                 column: "DepartmentID");
@@ -140,6 +167,9 @@ namespace UniversityCourseManagement.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "CourseAssignmentTeachers");
+
             migrationBuilder.DropTable(
                 name: "Courses");
 

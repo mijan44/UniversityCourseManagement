@@ -11,7 +11,7 @@ namespace UniversityCourseManagement.ViewModel
 		//
 		public virtual Department Department { get; set; }
 		public Guid SemesterID { get; set; }
-		public Semester Semester { get; set; }
+		public virtual Semester Semester { get; set; }
 		public Guid DepartmentID { get; set; }
 
 

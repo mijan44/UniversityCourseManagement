@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using UniversityCourseManagement.Data;
 using UniversityCourseManagement.Models;
 using UniversityCourseManagement.ViewModel;
@@ -53,6 +54,61 @@ namespace UniversityCourseManagement.Controllers
 
 			return CreatedAtAction("GetCourses", new { id = course.Id }, courseRequest);
 
+		}
+
+		[HttpPut]
+		public IActionResult UpdateCourse (Guid id, Course updateCourse)
+		{
+			if (!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+			var existingCourse = _context.Courses.FirstOrDefault(d => d.Id == id);
+			{
+				if (existingCourse == null)
+				{
+					return NotFound();
+				}
+
+				existingCourse.CourseCode = updateCourse.CourseCode;
+				existingCourse.CourseName = updateCourse.CourseName;
+				existingCourse.CourseCredit = updateCourse.CourseCredit;
+				existingCourse.CourseDescription = updateCourse.CourseDescription;
+
+				_context.SaveChanges();
+				return Ok();
+			}
+
+			//bool CourseAvailable(int id)
+			//{
+			//	return true;
+			//}
+
+
+		}
+
+
+
+		private bool CourseAvailable(int id)
+		{
+			return _context.Courses.Any(id => _context.Courses.Any());
+		}
+
+
+		[HttpDelete("{id}")]
+		public async Task<IActionResult> DeleteCourse(Guid id)
+		{
+
+			var course = await _context.Courses.Where(x => x.Id == id).FirstAsync();
+			if (course == null)
+			{
+				return NotFound();
+			}
+			_context.Courses.Remove(course);
+
+			await _context.SaveChangesAsync();
+
+			return Ok();
 		}
 
 
