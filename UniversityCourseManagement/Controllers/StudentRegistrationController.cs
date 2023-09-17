@@ -32,6 +32,7 @@ namespace UniversityCourseManagement.Controllers
 				return BadRequest("Student already exist");
 			}
 
+
 			var student = new RegisterStudent();
 			student.Id = Guid.NewGuid();
 			student.StudentName = studentRequest.StudentName;

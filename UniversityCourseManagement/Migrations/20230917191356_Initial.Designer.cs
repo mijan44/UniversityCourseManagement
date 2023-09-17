@@ -12,8 +12,8 @@ using UniversityCourseManagement.Data;
 namespace UniversityCourseManagement.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230917093727_initial")]
-    partial class initial
+    [Migration("20230917191356_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,30 @@ namespace UniversityCourseManagement.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("UniversityCourseManagement.Models.ClassRoom", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Day")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("From")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RoomNo")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("To")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClassRooms");
+                });
 
             modelBuilder.Entity("UniversityCourseManagement.Models.Course", b =>
                 {
@@ -130,8 +154,9 @@ namespace UniversityCourseManagement.Migrations
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("RegistrationNumber")
-                        .HasColumnType("int");
+                    b.Property<string>("RegistrationNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("StudentAddress")
                         .IsRequired()
@@ -154,6 +179,31 @@ namespace UniversityCourseManagement.Migrations
                     b.ToTable("RegisterStudents");
                 });
 
+            modelBuilder.Entity("UniversityCourseManagement.Models.Result", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("GradeLetter")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RegisterStudentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("RegisterStudentId");
+
+                    b.ToTable("Results");
+                });
+
             modelBuilder.Entity("UniversityCourseManagement.Models.Semester", b =>
                 {
                     b.Property<Guid>("Id")
@@ -167,6 +217,29 @@ namespace UniversityCourseManagement.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Semesters");
+                });
+
+            modelBuilder.Entity("UniversityCourseManagement.Models.StudentEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RegistrationNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("StudentEnrollments");
                 });
 
             modelBuilder.Entity("UniversityCourseManagement.Models.Teacher", b =>
@@ -236,6 +309,36 @@ namespace UniversityCourseManagement.Migrations
                         .IsRequired();
 
                     b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("UniversityCourseManagement.Models.Result", b =>
+                {
+                    b.HasOne("UniversityCourseManagement.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UniversityCourseManagement.Models.RegisterStudent", "RegisterStudent")
+                        .WithMany()
+                        .HasForeignKey("RegisterStudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("RegisterStudent");
+                });
+
+            modelBuilder.Entity("UniversityCourseManagement.Models.StudentEnrollment", b =>
+                {
+                    b.HasOne("UniversityCourseManagement.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
                 });
 
             modelBuilder.Entity("UniversityCourseManagement.Models.Teacher", b =>

@@ -10,7 +10,7 @@ namespace UniversityCourseManagement.ViewModel
 		//public DateTime DateTime { get; set; }
 		public string StudentAddress { get; set; }
 		//public virtual Department Department { get; set; }
-		public int RegistrationNumber { get; set; }
+		public string RegistrationNumber { get; set; }
 
 	}
 }

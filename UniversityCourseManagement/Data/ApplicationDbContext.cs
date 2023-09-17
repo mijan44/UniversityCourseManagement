@@ -20,6 +20,9 @@ namespace UniversityCourseManagement.Data
 
 		public DbSet<CourseAssignmentTeacher> CourseAssignmentTeachers { get; set; }
 
+		public DbSet<ClassRoom> ClassRooms { get; set; }
+		public DbSet<StudentEnrollment> StudentEnrollments { get; set; }
+		public DbSet<Result> Results { get; set; }
 
 
 
