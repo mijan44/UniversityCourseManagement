@@ -19,11 +19,27 @@ namespace UniversityCourseManagement.Migrations
                     RoomNo = table.Column<int>(type: "int", nullable: false),
                     Day = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     From = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    To = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    To = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DepartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ClassRooms", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CourseEnrollments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RegistrationNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DepartmentId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseEnrollments", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -236,6 +252,9 @@ namespace UniversityCourseManagement.Migrations
 
             migrationBuilder.DropTable(
                 name: "CourseAssignmentTeachers");
+
+            migrationBuilder.DropTable(
+                name: "CourseEnrollments");
 
             migrationBuilder.DropTable(
                 name: "Results");

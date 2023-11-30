@@ -12,7 +12,7 @@ using UniversityCourseManagement.Data;
 namespace UniversityCourseManagement.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230917191356_Initial")]
+    [Migration("20230924072425_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -31,9 +31,15 @@ namespace UniversityCourseManagement.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Day")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("From")
                         .HasColumnType("datetime2");
@@ -113,6 +119,27 @@ namespace UniversityCourseManagement.Migrations
                     b.HasIndex("DepartmentId");
 
                     b.ToTable("CourseAssignmentTeachers");
+                });
+
+            modelBuilder.Entity("UniversityCourseManagement.Models.CourseEnrollment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RegistrationNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CourseEnrollments");
                 });
 
             modelBuilder.Entity("UniversityCourseManagement.Models.Department", b =>

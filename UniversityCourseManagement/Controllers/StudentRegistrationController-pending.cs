@@ -49,8 +49,53 @@ namespace UniversityCourseManagement.Controllers
 
 		}
 
+		[HttpPut]
+		public IActionResult UpdateRegisterStudent (Guid id, RegisterStudent updateRegisterStudent)
+		{
+			if(!ModelState.IsValid)
+			{
+				return BadRequest(ModelState);
+			}
+			var existingStudent = _context.RegisterStudents.FirstOrDefault(d => d.Id == id);
+			{
+				if (existingStudent == null)
+				{
+					return NotFound();
+				}
 
-		 
+				existingStudent.StudentName = updateRegisterStudent.StudentName;
+				existingStudent.StudentEmail = updateRegisterStudent.StudentEmail;
+				existingStudent.StudentContactNo= updateRegisterStudent.StudentContactNo;
+				existingStudent.StudentAddress = updateRegisterStudent.StudentAddress;
+				existingStudent.RegistrationNumber = updateRegisterStudent.RegistrationNumber;
+
+
+				_context.SaveChanges();
+				return Ok();
+			}
+			
+		}
+
+		private bool StudentAvailable(int id)
+		{
+			return _context.RegisterStudents.Any(id => _context.RegisterStudents.Any());
+		}
+
+		[HttpDelete("{id}")]
+		public async Task<IActionResult> DeleteStudent(Guid id)
+		{
+
+			var student = await _context.RegisterStudents.Where(x => x.Id == id).FirstAsync();
+			if (student == null)
+			{
+				return NotFound();
+			}
+			_context.RegisterStudents.Remove(student);
+
+			await _context.SaveChangesAsync();
+
+			return Ok();
+		 }
 
 
 	}

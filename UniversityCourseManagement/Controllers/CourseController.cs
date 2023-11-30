@@ -59,7 +59,7 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPut]
 		public IActionResult UpdateCourse (Guid id, Course updateCourse)
 		{
-			if (!ModelState.IsValid)
+			if (!ModelState.IsValid)	
 			{
 				return BadRequest(ModelState);
 			}
