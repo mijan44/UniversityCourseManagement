@@ -20,72 +20,119 @@ namespace UniversityCourseManagement.Controllers
 
 
 		[HttpGet]
-		public async Task<ActionResult<Course>>GetCourses(Guid id)
+		public async Task<ActionResult<Course>>GetCourses()
 		{
-			var result= await _context.Courses.Where(x => x.Id == id).ToListAsync();
+			var result= await _context.Courses.ToListAsync();
 			return Ok(result);
 		}
 
 
+		//[HttpPost]
+		//public async Task<ActionResult<Course>> PostCourse(CourseViewModel courseRequest)
+		//{
+		//	if(_context.Courses.Any(d => d.CourseCode == courseRequest.CourseCode || d.CourseName == courseRequest.CourseName )) 
+		//	{
+		//		return BadRequest("Course code or Course name already exists");
+		//	}
+
+		//	var course = new Course();
+		//	course.Id = Guid.NewGuid();
+		//	course.CourseCode = courseRequest.CourseCode;
+		//	course.CourseName = courseRequest.CourseName;
+		//	course.CourseCredit = courseRequest.CourseCredit;
+		//	course.CourseDescription = courseRequest.CourseDescription;
+		//	//course.Semester = courseRequest.Semester;
+		//	//course.Department = courseRequest.Department;
+		//	course.DepartmentID = courseRequest.DepartmentID;
+		//	course.SemesterID = courseRequest.SemesterID;
+
+
+
+		//	_context.Courses.Add(course);
+
+		//	await _context.SaveChangesAsync();
+
+		//	return CreatedAtAction("GetCourses", new { id = course.Id }, courseRequest);
+
+		//}
+
 		[HttpPost]
-		public async Task<ActionResult<Course>> PostCourse(CourseViewModel courseRequest)
+		public async Task<ActionResult<Course>> PostCourse(Course courseRequest)
 		{
-			if(_context.Courses.Any(d => d.CourseCode == courseRequest.CourseCode || d.CourseName == courseRequest.CourseName )) 
+			if(courseRequest.Id == null || courseRequest.Id == new Guid ("00000000-0000-0000-0000-000000000000"))
 			{
-				return BadRequest("Course code or Course name already exists");
+				var course = new Course();
+				course.Id = Guid.NewGuid();
+				course.CourseCode = courseRequest.CourseCode;
+				course.CourseName = courseRequest.CourseName;
+				course.CourseCredit = courseRequest.CourseCredit;
+				course.CourseDescription = courseRequest.CourseDescription;
+				course.Semester = courseRequest.Semester;
+				course.DepartmentID = courseRequest.DepartmentID;
+				
+
+
+
+				_context.Courses.Add(course);
+
+				await _context.SaveChangesAsync();
+
+			}
+			else
+			{
+				var existingCourse = _context.Courses.FirstOrDefault(d => d.Id == courseRequest.Id);
+				{
+					if (existingCourse == null)
+					{
+						return NotFound();
+					}
+
+					existingCourse.CourseCode = courseRequest.CourseCode;
+					existingCourse.CourseName = courseRequest.CourseName;
+					existingCourse.CourseCredit = courseRequest.CourseCredit;
+					existingCourse.CourseDescription = courseRequest.CourseDescription;
+
+					_context.SaveChanges();
+					
+				}
+
 			}
 
-			var course = new Course();
-			course.Id = Guid.NewGuid();
-			course.CourseCode = courseRequest.CourseCode;
-			course.CourseName = courseRequest.CourseName;
-			course.CourseCredit = courseRequest.CourseCredit;
-			course.CourseDescription = courseRequest.CourseDescription;
-			//course.Semester = courseRequest.Semester;
-			//course.Department = courseRequest.Department;
-			course.DepartmentID = courseRequest.DepartmentID;
-			course.SemesterID = courseRequest.SemesterID;
 
-
-
-			_context.Courses.Add(course);
-			
-			await _context.SaveChangesAsync();
-
-			return CreatedAtAction("GetCourses", new { id = course.Id }, courseRequest);
+			return Ok();
 
 		}
 
 		[HttpPut]
-		public IActionResult UpdateCourse (Guid id, Course updateCourse)
-		{
-			if (!ModelState.IsValid)	
-			{
-				return BadRequest(ModelState);
-			}
-			var existingCourse = _context.Courses.FirstOrDefault(d => d.Id == id);
-			{
-				if (existingCourse == null)
-				{
-					return NotFound();
-				}
+		//public IActionResult UpdateCourse (Guid id, Course updateCourse)
+		//{
+		//	if (!ModelState.IsValid)	
+		//	{
+		//		return BadRequest(ModelState);
+		//	}
+		//	var existingCourse = _context.Courses.FirstOrDefault(d => d.Id == id);
+		//	{
+		//		if (existingCourse == null)
+		//		{
+		//			return NotFound();
+		//		}
 
-				existingCourse.CourseCode = updateCourse.CourseCode;
-				existingCourse.CourseName = updateCourse.CourseName;
-				existingCourse.CourseCredit = updateCourse.CourseCredit;
-				existingCourse.CourseDescription = updateCourse.CourseDescription;
+		//		existingCourse.CourseCode = updateCourse.CourseCode;
+		//		existingCourse.CourseName = updateCourse.CourseName;
+		//		existingCourse.CourseCredit = updateCourse.CourseCredit;
+		//		existingCourse.CourseDescription = updateCourse.CourseDescription;
 
-				_context.SaveChanges();
-				return Ok();
-			}
+		//		_context.SaveChanges();
+		//		return Ok();
+		//	}
 
-			//bool CourseAvailable(int id)
-			//{
-			//	return true;
-			//}
+		//	//bool CourseAvailable(int id)
+		//	//{
+		//	//	return true;
+		//	//}
 
 
-		}
+		//}
 
 
 

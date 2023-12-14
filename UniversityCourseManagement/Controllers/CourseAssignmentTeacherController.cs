@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using UniversityCourseManagement.Data;
 using UniversityCourseManagement.Models;
 using UniversityCourseManagement.ViewModel;
@@ -18,59 +19,146 @@ namespace UniversityCourseManagement.Controllers
 		}
 
 		[HttpGet]
-		public async Task<ActionResult<CourseAssignmentTeacher>> GetAssignTeacher(Guid id) 
+		[Route("GetAssignedCourse")]
+		public async Task<ActionResult<AssignTeacherViewModel>> GetAssignedCourse()
 		{
-			var result = await _context.CourseAssignmentTeachers.Where(x => x.Id == id).ToListAsync();
+			List<AssignTeacherViewModel> lst = new List<AssignTeacherViewModel>();
+
+			var query = from cat in _context.CourseAssignmentTeachers
+						join t in _context.Teachers on cat.TeacherId equals t.Id
+						join c in _context.Courses on cat.CourseId equals c.Id
+						join d in _context.Departments on cat.DepartmentId equals d.Id
+						select new
+						{
+							Id = cat.Id,
+							TeacherId = cat.TeacherId,
+							CourseId = cat.CourseId,
+							DepartmentId = cat.DepartmentId,
+							TeacherName = t.TeacherName,
+							CourseName = c.CourseName,
+							DepartmentName = d.Name,
+							AssignedCredit = t.CreditToBeTaken,
+							RemainingCredit = cat.RemainingCredit,
+							CourseCredit = c.CourseCredit,
+
+						};
+
+			
+
+			foreach (var item in query)
+			{
+				AssignTeacherViewModel obj = new AssignTeacherViewModel();
+
+				obj.Id = item.Id;
+				obj.AssignedCredit = item.AssignedCredit;
+				obj.RemainingCredit = item.RemainingCredit;
+				obj.CourseId = item.CourseId;
+				obj.DepartmentId = item.DepartmentId;
+				obj.TeacherId = item.TeacherId;
+				obj.CourseName = item.CourseName;
+				obj.DepartmentName = item.DepartmentName;
+				obj.TeacherName = item.TeacherName;
+				obj.CourseCredit = Convert.ToDecimal (item.CourseCredit);
+				lst.Add(obj);
+			}
+
+
+			return Ok(lst);
+
+		}
+
+
+
+		[HttpGet]  /// to get remain credit 
+		[Route("GetRemainingCredit")]
+		public decimal GetRemainingCredit(string teacherId)
+		{
+			var creditTobeTaken = _context.Teachers.Where(x => x.Id == new Guid(teacherId)).Select(x=>x.CreditToBeTaken).FirstOrDefault();
+			var creditTaken = _context.CourseAssignmentTeachers.Where(x => x.TeacherId == new Guid(teacherId)).Sum(x=>x.AssignedCredit);
+
+			var remainCredit = Convert.ToDecimal(creditTobeTaken) - creditTaken;
+			return remainCredit;
+		}
+
+		[HttpGet]
+		public async Task<ActionResult<CourseAssignmentTeacher>> GetAssignTeacher() 
+		{
+			var result = await _context.CourseAssignmentTeachers.ToListAsync();
 			return Ok(result);
 		}
 
 		[HttpPost]
-		public async Task<ActionResult<CourseAssignmentTeacher>> PostAssignTeacher(AssignTeacherViewModel assignCourseTeacherRequest)
+		public async Task<ActionResult<CourseAssignmentTeacher>> PostAssignTeacher(CourseAssignmentTeacher assignCourseTeacherRequest)
 		{
-			if(_context.CourseAssignmentTeachers.Any(d => d.TeacherId == assignCourseTeacherRequest.TeacherId || d.CourseId == assignCourseTeacherRequest.CourseId))
+			if (assignCourseTeacherRequest.Id == null || assignCourseTeacherRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 			{
-				return BadRequest("Teacher already exist");
-			}
+
+			
 			var assignTeacher = new CourseAssignmentTeacher();
 			assignTeacher.Id = Guid.NewGuid();
 			assignTeacher.TeacherId = assignCourseTeacherRequest.TeacherId;
 			assignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
-			assignTeacher.AssignedCredit = assignCourseTeacherRequest.AssignedCredit;
-			assignTeacher.RemainingCredit = assignCourseTeacherRequest.RemainingCredit;
-			assignTeacher.Department = assignCourseTeacherRequest.Department;
+			assignTeacher.AssignedCredit = Convert.ToDecimal( _context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
+			
+			assignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
+			assignTeacher.DepartmentId = assignCourseTeacherRequest.DepartmentId;
 
 
 			_context.CourseAssignmentTeachers.Add(assignTeacher);
 			await _context.SaveChangesAsync();
-			return CreatedAtAction("GetAssignTeacher", new { id = assignTeacher.Id }, assignCourseTeacherRequest);
 
-
-		}
-		[HttpPut]
-		public IActionResult UpdateCourseAssignTeacher(Guid id, CourseAssignmentTeacher updateCourseAssignTeacher)
-		{
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
 			}
-			var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == id);
+			else
 			{
-				if (existingCourseAssignTeacher == null)
+				var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == assignCourseTeacherRequest.Id);
 				{
-					return NotFound();
+					if (existingCourseAssignTeacher == null)
+					{
+						return NotFound();
+					}
+					existingCourseAssignTeacher.AssignedCredit = Convert.ToDecimal(_context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
+					existingCourseAssignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
+					existingCourseAssignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
+					
+
+
+
+
+					_context.SaveChanges();
+					
 				}
-				existingCourseAssignTeacher.AssignedCredit += updateCourseAssignTeacher.AssignedCredit;
-				existingCourseAssignTeacher.RemainingCredit += updateCourseAssignTeacher.RemainingCredit;
-				existingCourseAssignTeacher.Department = updateCourseAssignTeacher.Department;
 
 
-
-				_context.SaveChanges();
-				return Ok();
 			}
 
+			return Ok();
 
 		}
+		//[HttpPut]
+		//public IActionResult UpdateCourseAssignTeacher(Guid id, CourseAssignmentTeacher updateCourseAssignTeacher)
+		//{
+		//	if (!ModelState.IsValid)
+		//	{
+		//		return BadRequest(ModelState);
+		//	}
+		//	var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == id);
+		//	{
+		//		if (existingCourseAssignTeacher == null)
+		//		{
+		//			return NotFound();
+		//		}
+		//		existingCourseAssignTeacher.AssignedCredit += updateCourseAssignTeacher.AssignedCredit;
+		//		existingCourseAssignTeacher.RemainingCredit += updateCourseAssignTeacher.RemainingCredit;
+		//		existingCourseAssignTeacher.DepartmentId = updateCourseAssignTeacher.DepartmentId;
+
+
+
+		//		_context.SaveChanges();
+		//		return Ok();
+		//	}
+
+
+		//}
 
 		private bool CourseAssignTeacherAvailable(int id)
 		{

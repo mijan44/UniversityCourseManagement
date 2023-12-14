@@ -20,10 +20,18 @@ namespace UniversityCourseManagement.Controllers
 		}
 
 
-		[HttpGet("{id:Guid}")]
-		public async Task<ActionResult<Department>>  GetDepartments(Guid id)
+		//[HttpGet("{id:Guid}")]
+		//public async Task<ActionResult<Department>>  GetDepartments(Guid id)
+		//{
+		//	var result = await _context.Departments.Where(x=>x.Id == id).ToListAsync();
+		//	return Ok(result);
+		//}
+
+
+		[HttpGet]
+		public async Task<ActionResult<Department>> GetDepartments()
 		{
-			var result = await _context.Departments.Where(x=>x.Id == id).ToListAsync();
+			var result = await _context.Departments.ToListAsync();
 			return Ok(result);
 		}
 

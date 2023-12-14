@@ -12,8 +12,8 @@ using UniversityCourseManagement.Data;
 namespace UniversityCourseManagement.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230924072425_Initial")]
-    partial class Initial
+    [Migration("20231213031654_insertColumnIntiRegisterStudentsTable")]
+    partial class insertColumnIntiRegisterStudentsTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -63,8 +63,7 @@ namespace UniversityCourseManagement.Migrations
 
                     b.Property<string>("CourseCode")
                         .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("CourseCredit")
                         .HasColumnType("float");
@@ -75,20 +74,15 @@ namespace UniversityCourseManagement.Migrations
 
                     b.Property<string>("CourseName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("DepartmentID")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("SemesterID")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("Semester")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DepartmentID");
-
-                    b.HasIndex("SemesterID");
 
                     b.ToTable("Courses");
                 });
@@ -116,8 +110,6 @@ namespace UniversityCourseManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
-
                     b.ToTable("CourseAssignmentTeachers");
                 });
 
@@ -130,8 +122,8 @@ namespace UniversityCourseManagement.Migrations
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("DepartmentId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<DateTime>("EnrollmentDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("RegistrationNumber")
                         .IsRequired()
@@ -150,8 +142,7 @@ namespace UniversityCourseManagement.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasMaxLength(7)
-                        .HasColumnType("nvarchar(7)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("InsertedAt")
                         .HasColumnType("datetime2");
@@ -161,8 +152,7 @@ namespace UniversityCourseManagement.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -180,6 +170,9 @@ namespace UniversityCourseManagement.Migrations
 
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("RegistrationNumber")
                         .IsRequired()
@@ -229,21 +222,6 @@ namespace UniversityCourseManagement.Migrations
                     b.HasIndex("RegisterStudentId");
 
                     b.ToTable("Results");
-                });
-
-            modelBuilder.Entity("UniversityCourseManagement.Models.Semester", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SemesterName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Semesters");
                 });
 
             modelBuilder.Entity("UniversityCourseManagement.Models.StudentEnrollment", b =>
@@ -303,39 +281,7 @@ namespace UniversityCourseManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DepartmentId");
-
                     b.ToTable("Teachers");
-                });
-
-            modelBuilder.Entity("UniversityCourseManagement.Models.Course", b =>
-                {
-                    b.HasOne("UniversityCourseManagement.Models.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UniversityCourseManagement.Models.Semester", "Semester")
-                        .WithMany()
-                        .HasForeignKey("SemesterID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
-
-                    b.Navigation("Semester");
-                });
-
-            modelBuilder.Entity("UniversityCourseManagement.Models.CourseAssignmentTeacher", b =>
-                {
-                    b.HasOne("UniversityCourseManagement.Models.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("UniversityCourseManagement.Models.Result", b =>
@@ -366,17 +312,6 @@ namespace UniversityCourseManagement.Migrations
                         .IsRequired();
 
                     b.Navigation("Course");
-                });
-
-            modelBuilder.Entity("UniversityCourseManagement.Models.Teacher", b =>
-                {
-                    b.HasOne("UniversityCourseManagement.Models.Department", "Department")
-                        .WithMany()
-                        .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Department");
                 });
 #pragma warning restore 612, 618
         }

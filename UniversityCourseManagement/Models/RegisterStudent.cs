@@ -10,6 +10,7 @@
 		public string StudentAddress { get; set; }
 		//public virtual Department Department { get; set; }
 		public string RegistrationNumber { get; set; }
+        public  Guid DepartmentId { get; set; }
 
-	}
+    }
 }

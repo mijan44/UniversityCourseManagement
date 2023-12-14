@@ -17,12 +17,22 @@ namespace UniversityCourseManagement.Controllers
 			_context = context;
 		}
 
+		//[HttpGet]
+		//public async Task<ActionResult<ClassRoom>> GetClassRoom (Guid id)
+		//{
+		//	var result = await _context.ClassRooms.Where(x => x.Id == id).ToListAsync();
+		//	return Ok(result);
+		//}
+
+
+
 		[HttpGet]
-		public async Task<ActionResult<ClassRoom>> GetClassRoom (Guid id)
+		public async Task<ActionResult<ClassRoom>> GetAllClass()
 		{
-			var result = await _context.ClassRooms.Where(x => x.Id == id).ToListAsync();
+			var result = await _context.ClassRooms.ToListAsync();
 			return Ok(result);
 		}
+
 
 		[HttpPost]
 		public async Task<ActionResult<ClassRoom>>PostClassRoom (ClassRoomViewModel requestClassRoom)
