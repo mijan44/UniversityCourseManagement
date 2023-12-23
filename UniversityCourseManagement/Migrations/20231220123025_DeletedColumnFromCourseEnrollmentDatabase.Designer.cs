@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UniversityCourseManagement.Data;
 
@@ -11,9 +12,11 @@ using UniversityCourseManagement.Data;
 namespace UniversityCourseManagement.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231220123025_DeletedColumnFromCourseEnrollmentDatabase")]
+    partial class DeletedColumnFromCourseEnrollmentDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -208,10 +211,14 @@ namespace UniversityCourseManagement.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("StudentId")
+                    b.Property<Guid>("RegisterStudentId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("RegisterStudentId");
 
                     b.ToTable("Results");
                 });
@@ -274,6 +281,25 @@ namespace UniversityCourseManagement.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Teachers");
+                });
+
+            modelBuilder.Entity("UniversityCourseManagement.Models.Result", b =>
+                {
+                    b.HasOne("UniversityCourseManagement.Models.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("UniversityCourseManagement.Models.RegisterStudent", "RegisterStudent")
+                        .WithMany()
+                        .HasForeignKey("RegisterStudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("RegisterStudent");
                 });
 
             modelBuilder.Entity("UniversityCourseManagement.Models.StudentEnrollment", b =>

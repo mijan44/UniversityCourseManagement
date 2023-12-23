@@ -24,60 +24,111 @@ namespace UniversityCourseManagement.Controllers
 			return Ok(result);
 		}
 
+		[HttpGet]
+		[Route("GetAllCourseEnroll")]
+		public async Task<ActionResult<CourseEnrollmentViewModel>> GetAllCourseEnrollment()
+		{
+			var result = await (from ce in _context.CourseEnrollments
+								join s in _context.RegisterStudents on ce.StudentId equals s.Id
+								join d in _context.Departments on s.DepartmentId equals d.Id
+								join c in _context.Courses on ce.CourseId equals c.Id
+								select new
+								{
+									ce.Id,
+									ce.StudentId,
+									StudentName = s.StudentName,
+									StudentEmail = s.StudentEmail,
+									DepartmentId = s.DepartmentId,
+									DepartmentName = d.Name,
+									ce.CourseId,
+									RegistrationNumber = s.RegistrationNumber,
+									CourseName = c.CourseName,
+									ce.EnrollmentDate
+								}).ToListAsync();
+
+			return Ok(result);
+		}
+
+
 		[HttpPost]
-		public async Task<ActionResult<CourseEnrollment>> PostCourseEnrollment(CourseEnrollmentViewModel requestCourseEnrollment)
+		public async Task<ActionResult<CourseEnrollment>> PostCourseEnrollment(CourseEnrollment requestCourseEnrollment)
 		{
-			if (_context.CourseEnrollments.Any(d => d.Id == requestCourseEnrollment.Id || d.RegistrationNumber == requestCourseEnrollment.RegistrationNumber))
+			if (requestCourseEnrollment.Id == null || requestCourseEnrollment.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 			{
-				return BadRequest("Course exisit");
+
+				var courseEnroll = new CourseEnrollment();
+				courseEnroll.Id = Guid.NewGuid();
+
+				courseEnroll.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+				courseEnroll.CourseId = requestCourseEnrollment.CourseId;
+				courseEnroll.StudentId = requestCourseEnrollment.StudentId;
+
+
+
+				_context.CourseEnrollments.Add(courseEnroll);
+				await _context.SaveChangesAsync();
+
 			}
-
-		
-
-			var courseEnroll = new CourseEnrollment();
-			courseEnroll.Id = requestCourseEnrollment.Id;
-			courseEnroll.RegistrationNumber = requestCourseEnrollment.RegistrationNumber;
-			courseEnroll.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
-			courseEnroll.CourseId = requestCourseEnrollment.CourseId;
-
-
-
-			_context.CourseEnrollments.Add(courseEnroll);
-			await _context.SaveChangesAsync();
-			return CreatedAtAction("GetCourseEnrollment", new { id = courseEnroll.Id }, requestCourseEnrollment);
-		}
-
-
-		[HttpPut]
-		public IActionResult UpdateCourseEnrollment(Guid id, CourseEnrollment updateCourseEnrollment)
-		{
-			if (!ModelState.IsValid)
+			else
 			{
-				return BadRequest(ModelState);
-			}
-			var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == id);
-			{
-				if (existingCourseEnrollment == null)
+				var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == requestCourseEnrollment.Id);
 				{
-					return NotFound();
+					if (existingCourseEnrollment == null)
+					{
+						return NotFound();
+					}
+
+					
+					existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+					existingCourseEnrollment.CourseId = requestCourseEnrollment.CourseId;
+					existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+
+
+
+					_context.SaveChanges();
+					
 				}
+				
 
-				existingCourseEnrollment.RegistrationNumber = updateCourseEnrollment.RegistrationNumber;
-				existingCourseEnrollment.EnrollmentDate = updateCourseEnrollment.EnrollmentDate;
-				existingCourseEnrollment.CourseId = updateCourseEnrollment.CourseId;
-		
-
-				_context.SaveChanges();
-				return Ok();
 			}
+			return Ok();
 
-			//bool CourseAvailable(int id)
-			//{
-			//	return true;
-			//}
+
 
 
 		}
+
+
+		//[HttpPut]
+		//public IActionResult UpdateCourseEnrollment(Guid id, CourseEnrollment updateCourseEnrollment)
+		//{
+		//	if (!ModelState.IsValid)
+		//	{
+		//		return BadRequest(ModelState);
+		//	}
+		//	var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == id);
+		//	{
+		//		if (existingCourseEnrollment == null)
+		//		{
+		//			return NotFound();
+		//		}
+
+		//		existingCourseEnrollment.RegistrationNumber = updateCourseEnrollment.RegistrationNumber;
+		//		existingCourseEnrollment.EnrollmentDate = updateCourseEnrollment.EnrollmentDate;
+		//		existingCourseEnrollment.CourseId = updateCourseEnrollment.CourseId;
+		
+
+		//		_context.SaveChanges();
+		//		return Ok();
+		//	}
+
+		//	//bool CourseAvailable(int id)
+		//	//{
+		//	//	return true;
+		//	//}
+
+
+		//}
 
 		private bool EnrollCourseAvailable(int id)
 		{

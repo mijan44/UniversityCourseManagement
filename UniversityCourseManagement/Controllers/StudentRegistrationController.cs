@@ -16,29 +16,66 @@ namespace UniversityCourseManagement.Controllers
 		{
 			_context = context;
 		}
+
+
 		[HttpGet]
-
-
-		public async Task<ActionResult<RegisterStudent>> GetStudent(Guid id)
+		[Route("GetStudentDetails")]
+		public async Task<ActionResult<CourseEnrollmentViewModel>> GetStudent( string studentId)
 		{
-			var result = await _context.RegisterStudents.Where(x => x.Id == id).ToListAsync();
+			var result = await _context.RegisterStudents.Where(x=>x.Id== new Guid(studentId)).FirstOrDefaultAsync();
 			return Ok(result);
 		}
+
+
+
+		[HttpGet]
+		public async Task<ActionResult<RegisterStudent>> GetStudent()
+		{
+			var result = await _context.RegisterStudents.ToListAsync();
+			return Ok(result);
+		}
+
+
+		//[HttpGet]
+		//public async Task<ActionResult<RegisterStudent>> GetStudent(Guid id)
+		//{
+		//	var result = await _context.RegisterStudents.Where(x => x.Id == id).ToListAsync();
+		//	return Ok(result);
+		//}
+
+
 		[HttpPost]
 		public async Task<ActionResult<RegisterStudent>>PostStudent(RegisterStudent studentRequest)
 		{
 			if (studentRequest.Id ==null || studentRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 			{
+				string registrationNumber;
+				string departmentCode;
+				int slNo = 0;
+
 
 				var student = new RegisterStudent();
 				student.Id = Guid.NewGuid();
 				student.StudentName = studentRequest.StudentName;
 				student.StudentEmail = studentRequest.StudentEmail;
 				student.StudentContactNo = studentRequest.StudentContactNo;
-				student.DateTime = studentRequest.DateTime;
+				student.DateTime = System.DateTime.Today;
 				student.StudentAddress = studentRequest.StudentAddress;
 				student.DepartmentId = studentRequest.DepartmentId;
-				student.RegistrationNumber = studentRequest.RegistrationNumber;
+				departmentCode = _context.Departments.Where(x => x.Id == studentRequest.DepartmentId).Select(x=>x.Code).FirstOrDefault();
+				var count = _context.RegisterStudents.Where(x => x.DepartmentId == studentRequest.DepartmentId).Count();
+				if (count > 0)
+				{
+					//slNo = _context.RegisterStudents.Where(x => x.Id == studentRequest.DepartmentId).Max(x => Convert.ToInt16(x.RegistrationNumber.Substring(12)))+1;
+					slNo = (from max in _context.RegisterStudents where max.DepartmentId == studentRequest.DepartmentId select Convert.ToInt16(max.RegistrationNumber.Substring(12))+1).Max();
+				}
+				else
+				{
+					slNo = 1;
+				}
+				
+				registrationNumber = departmentCode + "-" + student.DateTime.Year.ToString() + "-" + slNo.ToString("0000");
+				student.RegistrationNumber = registrationNumber;
 
 
 				_context.RegisterStudents.Add(student);
@@ -120,7 +157,7 @@ namespace UniversityCourseManagement.Controllers
 			await _context.SaveChangesAsync();
 
 			return Ok();
-		 }
+		}
 
 
 	}

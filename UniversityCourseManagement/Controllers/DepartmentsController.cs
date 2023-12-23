@@ -26,6 +26,7 @@ namespace UniversityCourseManagement.Controllers
 		//	var result = await _context.Departments.Where(x=>x.Id == id).ToListAsync();
 		//	return Ok(result);
 		//}
+		
 
 
 		[HttpGet]
