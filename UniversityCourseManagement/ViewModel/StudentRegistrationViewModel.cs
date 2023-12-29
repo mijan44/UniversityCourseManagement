@@ -4,7 +4,8 @@ namespace UniversityCourseManagement.ViewModel
 {
 	public class StudentRegistrationViewModel
 	{
-		public string StudentName { get; set; }
+        public Guid Id { get; set; }
+        public string StudentName { get; set; }
 		public string StudentEmail { get; set; }
 		public string StudentContactNo { get; set; }
 		//public DateTime DateTime { get; set; }
@@ -12,6 +13,7 @@ namespace UniversityCourseManagement.ViewModel
 		//public virtual Department Department { get; set; }
 		public string RegistrationNumber { get; set; }
         public Guid DepartmentId { get; set; }
+        public string DepartmentName { get; set; }
 
     }
 }

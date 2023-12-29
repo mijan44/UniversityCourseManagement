@@ -41,10 +41,9 @@ namespace UniversityCourseManagement.Controllers
 		public async Task<ActionResult<Department>> PostDepartment( DepartmentViewModel departmentRequest)
 		
 		{
-			if (_context.Departments.Any(d => d.Code == departmentRequest.Code || d.Name==departmentRequest.Name)) 
+			var existDepartment = _context.Departments.FirstOrDefault(x=>x.Name == departmentRequest.Name || x.Code == departmentRequest.Code);
+			if (existDepartment == null)
 			{
-				return BadRequest("Department code or Name already exists");
-			}
 
 			var department = new Department();
 			department.Id = Guid.NewGuid();
@@ -53,8 +52,15 @@ namespace UniversityCourseManagement.Controllers
 
 			_context.Departments.Add(department);
 			await _context.SaveChangesAsync();
+				return Ok("Department Saved Successfully");
 
-			return CreatedAtAction("GetDepartment", new { id = department.Id }, departmentRequest);
+			}
+			else
+			{
+				return Ok("Aleready exist Department");
+			}
+
+			
 
 		}
 

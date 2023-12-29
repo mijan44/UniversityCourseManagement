@@ -28,9 +28,23 @@ namespace UniversityCourseManagement.Controllers
 
 
 		[HttpGet]
-		public async Task<ActionResult<Teacher>> GetTeacher() 
+		public async Task<ActionResult<TeacherViewModel>> GetTeacher() 
 		{
-			var result = await _context.Teachers.ToListAsync();
+			var result = from t in _context.Teachers
+						 join d in _context.Departments on t.DepartmentId equals d.Id
+						 select new
+						 {
+							 t.TeacherName,
+							 t.TeacherAddress,
+							 t.TeacherEmail,
+							 t.ContactNo,
+							 t.Designation,
+							 DepartmentId = d.Id,
+							 DepartmentName = d.Name,
+							 t.Id,
+							 t.CreditToBeTaken
+
+						 };
 			return Ok(result);
 		}
 

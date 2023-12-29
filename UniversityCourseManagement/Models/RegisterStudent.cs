@@ -12,5 +12,6 @@
 		public string RegistrationNumber { get; set; }
         public  Guid DepartmentId { get; set; }
 
+
     }
 }

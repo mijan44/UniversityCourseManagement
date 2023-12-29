@@ -29,9 +29,24 @@ namespace UniversityCourseManagement.Controllers
 
 
 		[HttpGet]
-		public async Task<ActionResult<RegisterStudent>> GetStudent()
+		public async Task<ActionResult<StudentRegistrationViewModel>> GetStudent()
 		{
-			var result = await _context.RegisterStudents.ToListAsync();
+			var result  = from rs in _context.RegisterStudents
+								   join d in _context.Departments on rs.DepartmentId equals d.Id
+								   select new
+								   {
+									   Id = rs.Id,
+									   StudentName = rs.StudentName,
+									   StudentEmail = rs.StudentEmail,
+									   StudentContactNo = rs.StudentContactNo,
+									   StudentAddress = rs.StudentAddress,
+									   RegistrationNumber = rs.RegistrationNumber,
+									   DepartmentName = d.Name,
+									   DepartmentId = d.Id
+								   };
+
+			// 'dbContext' is the instance of your Entity Framework DbContext
+
 			return Ok(result);
 		}
 

@@ -82,7 +82,9 @@ namespace UniversityCourseManagement.Controllers
 			DateTime toDate = Convert.ToDateTime(requestClassRoom.To);
 			if (requestClassRoom.Id == null || requestClassRoom.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 			{
-				
+				var existRoom = _context.ClassRooms.Where(x => x.RoomNo == requestClassRoom.RoomNo).FirstOrDefault();
+				if (existRoom == null)
+				{ 
 				var classRoom = new ClassRoom();
 				classRoom.Id = requestClassRoom.Id;
 				classRoom.RoomNo = requestClassRoom.RoomNo;
@@ -92,11 +94,19 @@ namespace UniversityCourseManagement.Controllers
 				classRoom.CourseId = requestClassRoom.CourseId;
 				classRoom.DepartmentId = requestClassRoom.DepartmentId;
 
+					_context.ClassRooms.Add(classRoom);
+					await _context.SaveChangesAsync();
 
 
+				}
+				else
+				{
+					return Ok("Already Exist");
+				}
 
-				_context.ClassRooms.Add(classRoom);
-				await _context.SaveChangesAsync();
+
+				
+				
 				
 
 			}
