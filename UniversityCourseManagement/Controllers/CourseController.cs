@@ -109,6 +109,21 @@ namespace UniversityCourseManagement.Controllers
 
 
 
+		[HttpDelete]
+		public async Task<IActionResult> DeleteAllCourses()
+		{
+
+			var courses = await _context.Courses.FirstAsync();
+
+			_context.Courses.Remove(courses);
+
+			await _context.SaveChangesAsync();
+
+			return Ok();
+		}
+
+
+
 
 
 

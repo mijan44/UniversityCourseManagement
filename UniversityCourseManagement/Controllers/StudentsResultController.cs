@@ -48,38 +48,44 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<Result>> PostResult(Result request)
 		{
-			if (request.Id == null || request.Id == new Guid("00000000-0000-0000-0000-000000000000"))
+			var existResult = _context.Results.FirstOrDefault(x=>x.StudentId == request.StudentId  || x.CourseId == request.CourseId);
+			if (existResult == null)
 			{
-				var result = new Result();
-				result.Id = Guid.NewGuid();
-				result.StudentId = request.StudentId;
-				result.CourseId = request.CourseId;
-				result.GradeLetter = request.GradeLetter;
-				
-
-
-
-
-				_context.Results.Add(result);
-
-				await _context.SaveChangesAsync();
-
-			}
-			else
-			{
-				var existingResult = _context.Results.FirstOrDefault(d => d.Id == request.Id);
+				if (request.Id == null || request.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
-					if (existingResult == null)
-					{
-						return NotFound();
-					}
+					var result = new Result();
+					result.Id = Guid.NewGuid();
+					result.StudentId = request.StudentId;
+					result.CourseId = request.CourseId;
+					result.GradeLetter = request.GradeLetter;
 
-					existingResult.GradeLetter = request.GradeLetter;
-					
 
-					_context.SaveChanges();
+
+
+
+					_context.Results.Add(result);
+
+					await _context.SaveChangesAsync();
 
 				}
+				else
+				{
+					var existingResult = _context.Results.FirstOrDefault(d => d.Id == request.Id);
+					{
+						if (existingResult == null)
+						{
+							return NotFound();
+						}
+
+						existingResult.GradeLetter = request.GradeLetter;
+
+
+						_context.SaveChanges();
+
+					}
+
+				}
+
 
 			}
 

@@ -62,63 +62,70 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<RegisterStudent>>PostStudent(RegisterStudent studentRequest)
 		{
-			if (studentRequest.Id ==null || studentRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
+			var existStudent = _context.RegisterStudents.FirstOrDefault(x=>x.StudentEmail==studentRequest.StudentEmail || x.StudentContactNo==studentRequest.StudentContactNo);
+			if (existStudent == null)
 			{
-				string registrationNumber;
-				string departmentCode;
-				int slNo = 0;
-
-
-				var student = new RegisterStudent();
-				student.Id = Guid.NewGuid();
-				student.StudentName = studentRequest.StudentName;
-				student.StudentEmail = studentRequest.StudentEmail;
-				student.StudentContactNo = studentRequest.StudentContactNo;
-				student.DateTime = System.DateTime.Today;
-				student.StudentAddress = studentRequest.StudentAddress;
-				student.DepartmentId = studentRequest.DepartmentId;
-				departmentCode = _context.Departments.Where(x => x.Id == studentRequest.DepartmentId).Select(x=>x.Code).FirstOrDefault();
-				var count = _context.RegisterStudents.Where(x => x.DepartmentId == studentRequest.DepartmentId).Count();
-				if (count > 0)
+				if (studentRequest.Id == null || studentRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
-					//slNo = _context.RegisterStudents.Where(x => x.Id == studentRequest.DepartmentId).Max(x => Convert.ToInt16(x.RegistrationNumber.Substring(12)))+1;
-					slNo = (from max in _context.RegisterStudents where max.DepartmentId == studentRequest.DepartmentId select Convert.ToInt16(max.RegistrationNumber.Substring(12))+1).Max();
+					string registrationNumber;
+					string departmentCode;
+					int slNo = 0;
+
+
+					var student = new RegisterStudent();
+					student.Id = Guid.NewGuid();
+					student.StudentName = studentRequest.StudentName;
+					student.StudentEmail = studentRequest.StudentEmail;
+					student.StudentContactNo = studentRequest.StudentContactNo;
+					student.DateTime = System.DateTime.Today;
+					student.StudentAddress = studentRequest.StudentAddress;
+					student.DepartmentId = studentRequest.DepartmentId;
+					departmentCode = _context.Departments.Where(x => x.Id == studentRequest.DepartmentId).Select(x => x.Code).FirstOrDefault();
+					var count = _context.RegisterStudents.Where(x => x.DepartmentId == studentRequest.DepartmentId).Count();
+					if (count > 0)
+					{
+						//slNo = _context.RegisterStudents.Where(x => x.Id == studentRequest.DepartmentId).Max(x => Convert.ToInt16(x.RegistrationNumber.Substring(12)))+1;
+						slNo = (from max in _context.RegisterStudents where max.DepartmentId == studentRequest.DepartmentId select Convert.ToInt16(max.RegistrationNumber.Substring(12)) + 1).Max();
+					}
+					else
+					{
+						slNo = 1;
+					}
+
+					registrationNumber = departmentCode + "-" + student.DateTime.Year.ToString() + "-" + slNo.ToString("0000");
+					student.RegistrationNumber = registrationNumber;
+
+
+					_context.RegisterStudents.Add(student);
+					await _context.SaveChangesAsync();
+
 				}
 				else
 				{
-					slNo = 1;
-				}
-				
-				registrationNumber = departmentCode + "-" + student.DateTime.Year.ToString() + "-" + slNo.ToString("0000");
-				student.RegistrationNumber = registrationNumber;
-
-
-				_context.RegisterStudents.Add(student);
-				await _context.SaveChangesAsync();
-
-			}
-			else
-			{
-				var existingStudent = _context.RegisterStudents.FirstOrDefault(d => d.Id == studentRequest.Id);
-				{
-					if (existingStudent == null)
+					var existingStudent = _context.RegisterStudents.FirstOrDefault(d => d.Id == studentRequest.Id);
 					{
-						return NotFound();
+						if (existingStudent == null)
+						{
+							return NotFound();
+						}
+
+						existingStudent.StudentName = studentRequest.StudentName;
+						existingStudent.StudentEmail = studentRequest.StudentEmail;
+						existingStudent.StudentContactNo = studentRequest.StudentContactNo;
+						existingStudent.StudentAddress = studentRequest.StudentAddress;
+						existingStudent.RegistrationNumber = studentRequest.RegistrationNumber;
+
+
+						_context.SaveChanges();
+
 					}
 
-					existingStudent.StudentName = studentRequest.StudentName;
-					existingStudent.StudentEmail = studentRequest.StudentEmail;
-					existingStudent.StudentContactNo = studentRequest.StudentContactNo;
-					existingStudent.StudentAddress = studentRequest.StudentAddress;
-					existingStudent.RegistrationNumber = studentRequest.RegistrationNumber;
-
-
-					_context.SaveChanges();
-					
 				}
 
 			}
-		
+
+
+
 
 
 			return Ok();

@@ -53,41 +53,49 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<Teacher>> PostTeacher(Teacher teacherRequest)
 		{
-			if (teacherRequest.Id == null || teacherRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
-			{
-				var teacher = new Teacher();
-				teacher.Id = Guid.NewGuid();
-				teacher.TeacherName = teacherRequest.TeacherName;
-				teacher.TeacherAddress = teacherRequest.TeacherAddress;
-				teacher.TeacherEmail = teacherRequest.TeacherEmail;
-				teacher.ContactNo = teacherRequest.ContactNo;
-				teacher.Designation = teacherRequest.Designation;
-				//teacher.Department = teacherRequest.Department;
-				teacher.CreditToBeTaken = teacherRequest.CreditToBeTaken;
-				teacher.DepartmentId = teacherRequest.DepartmentId;
+			var existTeacher = _context.Teachers.FirstOrDefault(x=>x.TeacherEmail == teacherRequest.TeacherEmail || x.ContactNo == teacherRequest.ContactNo);
 
-				_context.Teachers.Add(teacher);
-				await _context.SaveChangesAsync();
-
-			}
-			else
+			if (existTeacher == null)
 			{
-				var existingTeacher = _context.Teachers.FirstOrDefault(t => t.Id == teacherRequest.Id);
-				if (existingTeacher == null)
+				if (teacherRequest.Id == null || teacherRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
-					return NotFound();
+					var teacher = new Teacher();
+					teacher.Id = Guid.NewGuid();
+					teacher.TeacherName = teacherRequest.TeacherName;
+					teacher.TeacherAddress = teacherRequest.TeacherAddress;
+					teacher.TeacherEmail = teacherRequest.TeacherEmail;
+					teacher.ContactNo = teacherRequest.ContactNo;
+					teacher.Designation = teacherRequest.Designation;
+					//teacher.Department = teacherRequest.Department;
+					teacher.CreditToBeTaken = teacherRequest.CreditToBeTaken;
+					teacher.DepartmentId = teacherRequest.DepartmentId;
+
+					_context.Teachers.Add(teacher);
+					await _context.SaveChangesAsync();
+
+				}
+				else
+				{
+					var existingTeacher = _context.Teachers.FirstOrDefault(t => t.Id == teacherRequest.Id);
+					if (existingTeacher == null)
+					{
+						return NotFound();
+					}
+
+					existingTeacher.TeacherName = teacherRequest.TeacherName;
+					existingTeacher.TeacherAddress = teacherRequest.TeacherAddress;
+					existingTeacher.TeacherEmail = teacherRequest.TeacherEmail;
+					existingTeacher.ContactNo = teacherRequest.ContactNo;
+					existingTeacher.Designation = teacherRequest.Designation;
+					existingTeacher.CreditToBeTaken = teacherRequest.CreditToBeTaken;
+
+					_context.SaveChanges();
+
 				}
 
-				existingTeacher.TeacherName = teacherRequest.TeacherName;
-				existingTeacher.TeacherAddress = teacherRequest.TeacherAddress;
-				existingTeacher.TeacherEmail = teacherRequest.TeacherEmail;
-				existingTeacher.ContactNo = teacherRequest.ContactNo;
-				existingTeacher.Designation = teacherRequest.Designation;
-				existingTeacher.CreditToBeTaken = teacherRequest.CreditToBeTaken;
-
-				_context.SaveChanges();
 
 			}
+			
 
 
 			return Ok();

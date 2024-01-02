@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Globalization;
 using UniversityCourseManagement.Data;
 using UniversityCourseManagement.Models;
@@ -22,6 +23,7 @@ namespace UniversityCourseManagement.Controllers
 		[Route("GetViewClassSchedule")]
 		public async Task<ActionResult<ViewClassSchedule>> GetViewClassSchedule(string DepartmentId)
 		{
+			List<ViewClassSchedule> list = new List<ViewClassSchedule>();
 			var query = (from d in _context.Departments
 						join cr in _context.ClassRooms on d.Id equals cr.DepartmentId
 						join c in _context.Courses on cr.CourseId equals c.Id
@@ -35,9 +37,47 @@ namespace UniversityCourseManagement.Controllers
 							cr.To,
 							ScheduleInfo = "R. No :"+ cr.RoomNo + ","+ cr.Day.Substring(0,3)+","+ string.Format("{0:hh:mm tt}", cr.From) + " - "+ string.Format("{0:hh:mm tt}", cr.To) + ";"
 
-						}).Where(x=>x.DepartmentId==new Guid(DepartmentId));
+						}).Where(x=>x.DepartmentId==new Guid(DepartmentId)).ToList();
 
-			return Ok(query);
+			if (query.Any())
+			{
+				var groupByCourse = from std in query
+									group std by std.CourseCode into stdgroup 
+									orderby stdgroup.Key
+									select new
+									{
+										key = stdgroup.Key,
+										student = stdgroup.OrderBy(x=>x.CourseName)
+
+									};
+
+				foreach (var group in groupByCourse)
+				{
+					ViewClassSchedule obj = new ViewClassSchedule();
+					obj.CourseCode = group.key;
+					obj.CourseName = group.student.Select(x=>x.CourseName).FirstOrDefault();
+					string schedule = " ";
+					var firstItem = group.student.First();
+
+					foreach (var stu in group.student) 
+					{ 
+						if (stu.Equals(firstItem)){
+
+							schedule = stu.ScheduleInfo.ToString();
+						}
+						else
+						{
+							schedule = schedule + " " + stu.ScheduleInfo.ToString();
+						}
+
+					}
+					obj.ScheduleInfo = schedule;
+					list.Add(obj);
+				}
+
+			}
+
+			return Ok(list);
 
 		}
 
@@ -82,7 +122,7 @@ namespace UniversityCourseManagement.Controllers
 			DateTime toDate = Convert.ToDateTime(requestClassRoom.To);
 			if (requestClassRoom.Id == null || requestClassRoom.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 			{
-				var existRoom = _context.ClassRooms.Where(x => x.RoomNo == requestClassRoom.RoomNo).FirstOrDefault();
+				var existRoom = _context.ClassRooms.Where(x => x.RoomNo == requestClassRoom.RoomNo && x.Day == requestClassRoom.Day && (x.From >= fromDate || x.To<= toDate)).FirstOrDefault();
 				if (existRoom == null)
 				{ 
 				var classRoom = new ClassRoom();
@@ -101,7 +141,7 @@ namespace UniversityCourseManagement.Controllers
 				}
 				else
 				{
-					return Ok("Already Exist");
+					return Ok("Already Exist Time");
 				}
 
 
@@ -154,6 +194,26 @@ namespace UniversityCourseManagement.Controllers
 
 			return Ok();
 		}
+
+
+
+		[HttpDelete]
+		public async Task<IActionResult> DeleteAllClassRoom()
+		{
+
+			var classRoom = await _context.ClassRooms.FirstAsync();
+			
+			_context.ClassRooms.Remove(classRoom);
+
+			await _context.SaveChangesAsync();
+
+			return Ok();
+		}
+
+
+
+
+
 
 
 

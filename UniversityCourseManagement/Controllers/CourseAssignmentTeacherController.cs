@@ -90,46 +90,53 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<CourseAssignmentTeacher>> PostAssignTeacher(CourseAssignmentTeacher assignCourseTeacherRequest)
 		{
-			if (assignCourseTeacherRequest.Id == null || assignCourseTeacherRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
+			var existAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(x=>x.CourseId == assignCourseTeacherRequest.CourseId);
+			if (existAssignTeacher == null)
 			{
-
-			
-			var assignTeacher = new CourseAssignmentTeacher();
-			assignTeacher.Id = Guid.NewGuid();
-			assignTeacher.TeacherId = assignCourseTeacherRequest.TeacherId;
-			assignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
-			assignTeacher.AssignedCredit = Convert.ToDecimal( _context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
-			
-			assignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
-			assignTeacher.DepartmentId = assignCourseTeacherRequest.DepartmentId;
-
-
-			_context.CourseAssignmentTeachers.Add(assignTeacher);
-			await _context.SaveChangesAsync();
-
-			}
-			else
-			{
-				var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == assignCourseTeacherRequest.Id);
+				if (assignCourseTeacherRequest.Id == null || assignCourseTeacherRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
-					if (existingCourseAssignTeacher == null)
+
+
+					var assignTeacher = new CourseAssignmentTeacher();
+					assignTeacher.Id = Guid.NewGuid();
+					assignTeacher.TeacherId = assignCourseTeacherRequest.TeacherId;
+					assignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
+					assignTeacher.AssignedCredit = Convert.ToDecimal(_context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
+
+					assignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
+					assignTeacher.DepartmentId = assignCourseTeacherRequest.DepartmentId;
+
+
+					_context.CourseAssignmentTeachers.Add(assignTeacher);
+					await _context.SaveChangesAsync();
+
+				}
+				else
+				{
+					var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == assignCourseTeacherRequest.Id);
 					{
-						return NotFound();
+						if (existingCourseAssignTeacher == null)
+						{
+							return NotFound();
+						}
+						existingCourseAssignTeacher.AssignedCredit = Convert.ToDecimal(_context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
+						existingCourseAssignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
+						existingCourseAssignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
+
+
+
+
+
+						_context.SaveChanges();
+
 					}
-					existingCourseAssignTeacher.AssignedCredit = Convert.ToDecimal(_context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
-					existingCourseAssignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
-					existingCourseAssignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
-					
 
 
-
-
-					_context.SaveChanges();
-					
 				}
 
-
 			}
+
+			
 
 			return Ok();
 

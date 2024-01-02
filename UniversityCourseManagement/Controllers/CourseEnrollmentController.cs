@@ -53,44 +53,50 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<CourseEnrollment>> PostCourseEnrollment(CourseEnrollment requestCourseEnrollment)
 		{
-			if (requestCourseEnrollment.Id == null || requestCourseEnrollment.Id == new Guid("00000000-0000-0000-0000-000000000000"))
+			var existEnrollCourse = _context.CourseEnrollments.FirstOrDefault(x=>x.StudentId == requestCourseEnrollment.StudentId || x.CourseId == requestCourseEnrollment.CourseId);
+			if (existEnrollCourse == null)
 			{
-
-				var courseEnroll = new CourseEnrollment();
-				courseEnroll.Id = Guid.NewGuid();
-
-				courseEnroll.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
-				courseEnroll.CourseId = requestCourseEnrollment.CourseId;
-				courseEnroll.StudentId = requestCourseEnrollment.StudentId;
-
-
-
-				_context.CourseEnrollments.Add(courseEnroll);
-				await _context.SaveChangesAsync();
-
-			}
-			else
-			{
-				var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == requestCourseEnrollment.Id);
+				if (requestCourseEnrollment.Id == null || requestCourseEnrollment.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
-					if (existingCourseEnrollment == null)
+
+					var courseEnroll = new CourseEnrollment();
+					courseEnroll.Id = Guid.NewGuid();
+
+					courseEnroll.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+					courseEnroll.CourseId = requestCourseEnrollment.CourseId;
+					courseEnroll.StudentId = requestCourseEnrollment.StudentId;
+
+
+
+					_context.CourseEnrollments.Add(courseEnroll);
+					await _context.SaveChangesAsync();
+
+				}
+				else
+				{
+					var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == requestCourseEnrollment.Id);
 					{
-						return NotFound();
+						if (existingCourseEnrollment == null)
+						{
+							return NotFound();
+						}
+
+
+						existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+						existingCourseEnrollment.CourseId = requestCourseEnrollment.CourseId;
+						existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+
+
+
+						_context.SaveChanges();
+
 					}
 
-					
-					existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
-					existingCourseEnrollment.CourseId = requestCourseEnrollment.CourseId;
-					existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
 
-
-
-					_context.SaveChanges();
-					
 				}
-				
 
 			}
+			
 			return Ok();
 
 
