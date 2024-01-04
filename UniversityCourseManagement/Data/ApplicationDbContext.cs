@@ -24,6 +24,7 @@ namespace UniversityCourseManagement.Data
 		public DbSet<StudentEnrollment> StudentEnrollments { get; set; }
 		public DbSet<Result> Results { get; set; }
 		public DbSet<CourseEnrollment> CourseEnrollments { get; set; }
+		public DbSet<User> Users { get; set; }
 
 
 
