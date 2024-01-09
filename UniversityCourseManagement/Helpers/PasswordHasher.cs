@@ -1,4 +1,7 @@
-﻿using System.Security.Cryptography;
+﻿using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -63,6 +66,36 @@ namespace UniversityCourseManagement.Helpers
 			}
 			return sb.ToString();
 		}
+
+
+		public string CreateToken(string userName, string email)
+		{
+			var jwtTokenHandler = new JwtSecurityTokenHandler();
+			var key = Encoding.ASCII.GetBytes("thisIsMySecurity..............");
+
+			var identity = new ClaimsIdentity(new Claim[]
+			{
+				new Claim (ClaimTypes.Name, userName),
+				new Claim(ClaimTypes.Email, email)
+
+			});
+
+			var credential = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256);
+
+
+			var tokenDescriptor = new SecurityTokenDescriptor
+			{
+				Subject = identity,
+				Expires = DateTime.Now.AddDays(1),
+				SigningCredentials = credential
+			};
+
+			var token = jwtTokenHandler.CreateToken(tokenDescriptor);
+			return jwtTokenHandler.WriteToken(token);
+
+
+		}
+
 
 	}
 }

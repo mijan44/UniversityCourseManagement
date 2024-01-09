@@ -63,12 +63,19 @@ namespace UniversityCourseManagement.Controllers
 		[Route("UserLogin")]
 		public async Task<IActionResult> UserLogin(string UserEmail, string UserPassword)
 		{
+			string token = string.Empty;
 			var checkPassword = false;
 			PasswordHasher hash = new PasswordHasher();
 			var userLogin = _context.Users.FirstOrDefault(x=>x.UserEmail == UserEmail );
 			if (userLogin != null)
 			{
 				checkPassword = hash.VerifyPassword(UserPassword,userLogin.UserPassword);
+
+				if (checkPassword)
+				{
+					token = hash.CreateToken(userLogin.UserName, userLogin.UserEmail);
+					return Ok(new { token = token, message = "Log in Success"});
+				}
 			}
 			return Ok(checkPassword);
 
