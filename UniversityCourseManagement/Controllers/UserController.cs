@@ -76,8 +76,9 @@ namespace UniversityCourseManagement.Controllers
 					token = hash.CreateToken(userLogin.UserName, userLogin.UserEmail);
 					return Ok(new { token = token, message = "Log in Success"});
 				}
+	
 			}
-			return Ok(checkPassword);
+			return BadRequest(new { message = "Log in failed" });
 
 		}
 		

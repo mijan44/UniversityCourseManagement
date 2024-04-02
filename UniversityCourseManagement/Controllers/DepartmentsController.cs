@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Any;
 using System.Linq;
 using UniversityCourseManagement.Data;
+using UniversityCourseManagement.Helpers;
 using UniversityCourseManagement.Models;
 using UniversityCourseManagement.ViewModel;
 
@@ -26,13 +28,13 @@ namespace UniversityCourseManagement.Controllers
 		//	var result = await _context.Departments.Where(x=>x.Id == id).ToListAsync();
 		//	return Ok(result);
 		//}
-		
 
+		
 
 		[HttpGet]
 		public async Task<ActionResult<Department>> GetDepartments()
 		{
-			var result = await _context.Departments.ToListAsync();
+			var result = await _context.Departments.Where(x=>!x.IsDeleted).ToListAsync();
 			return Ok(result);
 		}
 
@@ -41,24 +43,46 @@ namespace UniversityCourseManagement.Controllers
 		public async Task<ActionResult<Department>> PostDepartment( DepartmentViewModel departmentRequest)
 		
 		{
-			var existDepartment = _context.Departments.FirstOrDefault(x=>x.Name == departmentRequest.Name || x.Code == departmentRequest.Code);
+			var existDepartment = _context.Departments.FirstOrDefault(x=>x.Name == departmentRequest.Name && x.Code == departmentRequest.Code && !x.IsDeleted);
 			if (existDepartment == null)
 			{
+				if (departmentRequest.Id == null || departmentRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
+				{
+					Validation validation = new Validation();
+					if(validation.CheckSpecialChar(departmentRequest.Code) || validation.CheckSpecialChar(departmentRequest.Name))
+					return Ok(new { ststusCode = 200, message = departmentRequest.Name + " - Special Character Not Allowed" });
+					
 
-			var department = new Department();
-			department.Id = Guid.NewGuid();
-			department.Code = departmentRequest.Code;
-			department.Name = departmentRequest.Name;
+					var department = new Department();
+					department.Id = Guid.NewGuid();
+					department.Code = departmentRequest.Code;
+					department.Name = departmentRequest.Name; 
+					department.InsertedAt = DateTime.Now;
+					
 
-			_context.Departments.Add(department);
-			await _context.SaveChangesAsync();
-				return Ok("Department Saved Successfully");
+					_context.Departments.Add(department);
+					await _context.SaveChangesAsync();
+					return Ok(new { ststusCode = 200, message = department.Name + " Department Saved SuccessFully" });
+
+				}
+			
 
 			}
 			else
 			{
-				return Ok("Aleready exist Department");
+				var existingDepartment = _context.Departments.FirstOrDefault(d => d.Id == departmentRequest.Id);
+
+				// Update the properties of the existing department
+				existingDepartment.Code = departmentRequest.Code;
+				existingDepartment.Name = departmentRequest.Name;
+				existingDepartment.UpdatedAt = DateTime.Now; // Update the UpdatedAt timestamp
+
+				// Save changes to the database
+				_context.SaveChanges();
+				return Ok(new { ststusCode = 200, message = existingDepartment.Name + " Department Updated Successfully" });
 			}
+
+			return Ok();
 
 			
 
@@ -66,33 +90,6 @@ namespace UniversityCourseManagement.Controllers
 
 		
 
-		/// Update Departments
-		[HttpPut]
-		public IActionResult UpdateDepartment(Guid id, Department updatedDepartment)
-		{
-			if (!ModelState.IsValid)
-			{
-				return BadRequest(ModelState);
-			}
-
-			// Find the department by ID
-			var existingDepartment = _context.Departments.FirstOrDefault(d => d.Id == id);
-
-			if (existingDepartment == null)
-			{
-				return NotFound();
-			}
-
-			// Update the properties of the existing department
-			existingDepartment.Code = updatedDepartment.Code;
-			existingDepartment.Name = updatedDepartment.Name;
-			existingDepartment.UpdatedAt = DateTime.Now; // Update the UpdatedAt timestamp
-
-			// Save changes to the database
-			_context.SaveChanges();
-
-			return Ok();
-		}
 
 		private bool DepartmentAvailable(int id)
 		{
@@ -114,11 +111,12 @@ namespace UniversityCourseManagement.Controllers
 			{
 				return NotFound();
 			}
-			_context.Departments.Remove(department);
+			department.IsDeleted = true;
+			_context.Departments.Update(department);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 200, message = department.Name + " Department Deleted Successfully" });
 		}
 
 

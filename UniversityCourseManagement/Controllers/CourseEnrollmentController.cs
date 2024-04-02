@@ -41,19 +41,20 @@ namespace UniversityCourseManagement.Controllers
 									DepartmentId = s.DepartmentId,
 									DepartmentName = d.Name,
 									ce.CourseId,
+									ce.IsDeleted,
 									RegistrationNumber = s.RegistrationNumber,
 									CourseName = c.CourseName,
 									ce.EnrollmentDate
 								}).ToListAsync();
 
-			return Ok(result);
+			return Ok(result.Where(x=>!x.IsDeleted));
 		}
 
 
 		[HttpPost]
 		public async Task<ActionResult<CourseEnrollment>> PostCourseEnrollment(CourseEnrollment requestCourseEnrollment)
 		{
-			var existEnrollCourse = _context.CourseEnrollments.FirstOrDefault(x=>x.StudentId == requestCourseEnrollment.StudentId || x.CourseId == requestCourseEnrollment.CourseId);
+			var existEnrollCourse = _context.CourseEnrollments.FirstOrDefault(x=>x.StudentId == requestCourseEnrollment.StudentId && x.CourseId == requestCourseEnrollment.CourseId && !x.IsDeleted );
 			if (existEnrollCourse == null)
 			{
 				if (requestCourseEnrollment.Id == null || requestCourseEnrollment.Id == new Guid("00000000-0000-0000-0000-000000000000"))
@@ -70,34 +71,33 @@ namespace UniversityCourseManagement.Controllers
 
 					_context.CourseEnrollments.Add(courseEnroll);
 					await _context.SaveChangesAsync();
+					return Ok(new { ststusCode = 200, message = " Course Enrolled SuccessFully" });
 
 				}
-				else
-				{
-					var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == requestCourseEnrollment.Id);
-					{
-						if (existingCourseEnrollment == null)
-						{
-							return NotFound();
-						}
-
-
-						existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
-						existingCourseEnrollment.CourseId = requestCourseEnrollment.CourseId;
-						existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
-
-
-
-						_context.SaveChanges();
-
-					}
-
-
-				}
+				
 
 			}
-			
-			return Ok();
+			else
+			{
+				var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == requestCourseEnrollment.Id);
+				{
+
+
+					existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+					existingCourseEnrollment.CourseId = requestCourseEnrollment.CourseId;
+					existingCourseEnrollment.EnrollmentDate = requestCourseEnrollment.EnrollmentDate;
+
+
+
+					_context.SaveChanges();
+					return Ok(new { ststusCode = 200, message = " Course Enroll Updated SuccessFully" });
+
+				}
+
+
+			}
+
+			return Ok("Course Enrollment Exist");
 
 
 
@@ -105,36 +105,7 @@ namespace UniversityCourseManagement.Controllers
 		}
 
 
-		//[HttpPut]
-		//public IActionResult UpdateCourseEnrollment(Guid id, CourseEnrollment updateCourseEnrollment)
-		//{
-		//	if (!ModelState.IsValid)
-		//	{
-		//		return BadRequest(ModelState);
-		//	}
-		//	var existingCourseEnrollment = _context.CourseEnrollments.FirstOrDefault(d => d.Id == id);
-		//	{
-		//		if (existingCourseEnrollment == null)
-		//		{
-		//			return NotFound();
-		//		}
-
-		//		existingCourseEnrollment.RegistrationNumber = updateCourseEnrollment.RegistrationNumber;
-		//		existingCourseEnrollment.EnrollmentDate = updateCourseEnrollment.EnrollmentDate;
-		//		existingCourseEnrollment.CourseId = updateCourseEnrollment.CourseId;
 		
-
-		//		_context.SaveChanges();
-		//		return Ok();
-		//	}
-
-		//	//bool CourseAvailable(int id)
-		//	//{
-		//	//	return true;
-		//	//}
-
-
-		//}
 
 		private bool EnrollCourseAvailable(int id)
 		{
@@ -149,13 +120,14 @@ namespace UniversityCourseManagement.Controllers
 			var courseEnrollment = await _context.CourseEnrollments.Where(x => x.Id == id).FirstAsync();
 			if (courseEnrollment == null)
 			{
-				return NotFound();
+				return NotFound(new { ststusCode = 204, message = " Course Enrollment Deleted Failed" });
 			}
-			_context.CourseEnrollments.Remove(courseEnrollment);
+			courseEnrollment.IsDeleted = true;
+			_context.CourseEnrollments.Update(courseEnrollment);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 204, message = " Course Enrollment Deleted Successfully" });
 		}
 
 	}

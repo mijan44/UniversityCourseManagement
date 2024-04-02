@@ -11,7 +11,9 @@ namespace UniversityCourseManagement.Controllers
 	[ApiController]
 	public class StudentsResultController : ControllerBase
 	{
-		private readonly ApplicationDbContext _context;
+        
+		
+        private readonly ApplicationDbContext _context;
 		public StudentsResultController(ApplicationDbContext context)
 		{
 			_context = context;
@@ -22,6 +24,7 @@ namespace UniversityCourseManagement.Controllers
 		[Route("GetAllResults")]
 		public async Task<ActionResult<ResultViewModel>> GetAllResults()
 		{
+			
 			var result = await (from r in _context.Results
 								join s in _context.RegisterStudents on r.StudentId equals s.Id
 								join d in _context.Departments on s.DepartmentId equals d.Id
@@ -38,17 +41,18 @@ namespace UniversityCourseManagement.Controllers
 									s.RegistrationNumber,
 									CourseName = c.CourseName,
 									r.GradeLetter,
+									r.IsDeleted
 									
 								}).ToListAsync();
 
-			return Ok(result);
+			return Ok(result.Where(x=>!x.IsDeleted));
 		}
 
 
 		[HttpPost]
 		public async Task<ActionResult<Result>> PostResult(Result request)
 		{
-			var existResult = _context.Results.FirstOrDefault(x=>x.StudentId == request.StudentId  || x.CourseId == request.CourseId);
+			var existResult = _context.Results.FirstOrDefault(x=>x.StudentId == request.StudentId  &&  x.CourseId == request.CourseId && !x.IsDeleted);
 			if (existResult == null)
 			{
 				if (request.Id == null || request.Id == new Guid("00000000-0000-0000-0000-000000000000"))
@@ -66,31 +70,31 @@ namespace UniversityCourseManagement.Controllers
 					_context.Results.Add(result);
 
 					await _context.SaveChangesAsync();
+					return Ok(new { ststusCode = 200, message = " Student's Result Saved SuccessFully" });
 
 				}
-				else
+				
+
+
+			}
+			else
+			{
+				var existingResult = _context.Results.FirstOrDefault(d => d.Id == request.Id);
 				{
-					var existingResult = _context.Results.FirstOrDefault(d => d.Id == request.Id);
-					{
-						if (existingResult == null)
-						{
-							return NotFound();
-						}
+					
 
-						existingResult.GradeLetter = request.GradeLetter;
+					existingResult.GradeLetter = request.GradeLetter;
 
 
-						_context.SaveChanges();
-
-					}
+					_context.SaveChanges();
+					return Ok(new { ststusCode = 200, message = " Student's Result Updated SuccessFully" });
 
 				}
-
 
 			}
 
 
-			return Ok();
+			return Ok("Students Result Alreaddy Exist");
 
 		}
 
@@ -102,13 +106,14 @@ namespace UniversityCourseManagement.Controllers
 			var result = await _context.Results.Where(x => x.Id == id).FirstAsync();
 			if (result == null)
 			{
-				return NotFound();
+				return NotFound(new { ststusCode = 204, message = " Student's Result Deleted Failed" });
 			}
-			_context.Results.Remove(result);
+			result.IsDeleted = true;
+			_context.Results.Update(result);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 204, message = " Student's Result Deleted SuccessFully" });
 		}
 
 

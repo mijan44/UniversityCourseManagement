@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using UniversityCourseManagement.Data;
+using UniversityCourseManagement.Helpers;
 using UniversityCourseManagement.Models;
 using UniversityCourseManagement.ViewModel;
-
 namespace UniversityCourseManagement.Controllers
 {
 	[Route("api/[controller]")]
@@ -22,8 +22,26 @@ namespace UniversityCourseManagement.Controllers
 		[HttpGet]
 		public async Task<ActionResult<Course>>GetCourses()
 		{
-			var result= await _context.Courses.ToListAsync();
-			return Ok(result);
+			
+			var result = from t in _context.Courses
+						 join d in _context.Departments on t.DepartmentID equals d.Id
+						 select new
+						 {
+							 t.CourseName,
+							 t.CourseCode,
+							 t.CourseCredit,
+							 t.CourseDescription,
+							 t.Semester,
+							 t.IsDeleted,
+							
+							 DepartmentId = d.Id,
+							 DepartmentName = d.Name,
+							 t.Id,
+							
+
+						 };
+			return Ok(result.Where(x=>!x.IsDeleted));
+			
 		}
 
 
@@ -36,6 +54,12 @@ namespace UniversityCourseManagement.Controllers
 			{
 				if (courseRequest.Id == null || courseRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
+
+					Validation validation = new Validation();
+					if(validation.CheckSpecialChar(courseRequest.CourseCode))
+					return Ok(new { ststusCode = 200, message = courseRequest.CourseCode + " - Special Character Not Allowed" });
+
+
 					var course = new Course();
 					course.Id = Guid.NewGuid();
 					course.CourseCode = courseRequest.CourseCode;
@@ -51,30 +75,29 @@ namespace UniversityCourseManagement.Controllers
 					_context.Courses.Add(course);
 
 					await _context.SaveChangesAsync();
+					return Ok(new { ststusCode = 200, message = course.CourseName + " Course Saved SuccessFully" });
 
 				}
-				else
+				
+			}
+			else
+			{
+				var existingCourse = _context.Courses.FirstOrDefault(d => d.Id == courseRequest.Id);
 				{
-					var existingCourse = _context.Courses.FirstOrDefault(d => d.Id == courseRequest.Id);
-					{
-						if (existingCourse == null)
-						{
-							return NotFound();
-						}
+				
+					existingCourse.CourseCode = courseRequest.CourseCode;
+					existingCourse.CourseName = courseRequest.CourseName;
+					existingCourse.CourseCredit = courseRequest.CourseCredit;
+					existingCourse.CourseDescription = courseRequest.CourseDescription;
 
-						existingCourse.CourseCode = courseRequest.CourseCode;
-						existingCourse.CourseName = courseRequest.CourseName;
-						existingCourse.CourseCredit = courseRequest.CourseCredit;
-						existingCourse.CourseDescription = courseRequest.CourseDescription;
-
-						_context.SaveChanges();
-
-					}
+					_context.SaveChanges();
+					return Ok(new { ststusCode = 204, message = existingCourse.CourseName + " Course Updated SuccessFully" });
 
 				}
+
 			}
 
-			
+
 
 
 			return Ok("Already Exist Course");
@@ -98,13 +121,14 @@ namespace UniversityCourseManagement.Controllers
 			var course = await _context.Courses.Where(x => x.Id == id).FirstAsync();
 			if (course == null)
 			{
-				return NotFound();
+				return NotFound(new { ststusCode = 204, message =  " Course Deleted Failed" });
 			}
-			_context.Courses.Remove(course);
+			course.IsDeleted = true;
+			_context.Courses.Update(course);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 200, message = course.CourseName + " Course Deleted SuccessFully" });
 		}
 
 
@@ -113,13 +137,16 @@ namespace UniversityCourseManagement.Controllers
 		public async Task<IActionResult> DeleteAllCourses()
 		{
 
-			var courses = await _context.Courses.FirstAsync();
-
-			_context.Courses.Remove(courses);
+			var courses = await _context.Courses.ToListAsync();
+			
+			foreach(var course in courses)
+			{
+				course.IsDeleted = true;
+			}
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 200, message =  " Course Unassigned SuccessFully" });
 		}
 
 

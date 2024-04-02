@@ -15,6 +15,7 @@ namespace UniversityCourseManagement.ViewModel
 		public string DepartmentName { get; set; }
         public decimal AssignedCredit { get; set; }
 		public decimal RemainingCredit { get; set; }
+		public bool IsDeleted { get; set; } 
 		
 		
 

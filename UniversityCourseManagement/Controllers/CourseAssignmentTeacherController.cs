@@ -40,6 +40,7 @@ namespace UniversityCourseManagement.Controllers
 							AssignedCredit = t.CreditToBeTaken,
 							RemainingCredit = cat.RemainingCredit,
 							CourseCredit = c.CourseCredit,
+							cat.IsDeleted
 
 						};
 
@@ -59,11 +60,13 @@ namespace UniversityCourseManagement.Controllers
 				obj.DepartmentName = item.DepartmentName;
 				obj.TeacherName = item.TeacherName;
 				obj.CourseCredit = Convert.ToDecimal (item.CourseCredit);
+				obj.IsDeleted = item.IsDeleted;
+				
 				lst.Add(obj);
 			}
 
 
-			return Ok(lst);
+			return Ok(lst.Where(x=>!x.IsDeleted));
 
 		}
 
@@ -90,7 +93,7 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<CourseAssignmentTeacher>> PostAssignTeacher(CourseAssignmentTeacher assignCourseTeacherRequest)
 		{
-			var existAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(x=>x.CourseId == assignCourseTeacherRequest.CourseId);
+			var existAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(x=>x.CourseId == assignCourseTeacherRequest.CourseId && x.TeacherId==assignCourseTeacherRequest.TeacherId && !x.IsDeleted);
 			if (existAssignTeacher == null)
 			{
 				if (assignCourseTeacherRequest.Id == null || assignCourseTeacherRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
@@ -109,63 +112,39 @@ namespace UniversityCourseManagement.Controllers
 
 					_context.CourseAssignmentTeachers.Add(assignTeacher);
 					await _context.SaveChangesAsync();
-
-				}
-				else
-				{
-					var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == assignCourseTeacherRequest.Id);
-					{
-						if (existingCourseAssignTeacher == null)
-						{
-							return NotFound();
-						}
-						existingCourseAssignTeacher.AssignedCredit = Convert.ToDecimal(_context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
-						existingCourseAssignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
-						existingCourseAssignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
-
-
-
-
-
-						_context.SaveChanges();
-
-					}
-
+					return Ok(new { ststusCode = 200, message = " Teacher Assigned SuccessFully" });
 
 				}
 
 			}
+			else
+			{
+				var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == assignCourseTeacherRequest.Id);
+				{
+					
+					existingCourseAssignTeacher.AssignedCredit = Convert.ToDecimal(_context.Courses.Where(x => x.Id == assignCourseTeacherRequest.CourseId).Select(x => x.CourseCredit).FirstOrDefault());
+					existingCourseAssignTeacher.RemainingCredit = Convert.ToDecimal(GetRemainingCredit(assignCourseTeacherRequest.TeacherId.ToString()));
+					existingCourseAssignTeacher.CourseId = assignCourseTeacherRequest.CourseId;
 
-			
 
-			return Ok();
+					_context.SaveChanges();
+					return Ok(new { ststusCode = 204, message = " Teacher Assigned Updated SuccessFully" });
+
+				}
+
+
+			}
+
+
+
+			return Ok("Already Teacher Assigned Exist");
 
 		}
-		//[HttpPut]
-		//public IActionResult UpdateCourseAssignTeacher(Guid id, CourseAssignmentTeacher updateCourseAssignTeacher)
-		//{
-		//	if (!ModelState.IsValid)
-		//	{
-		//		return BadRequest(ModelState);
-		//	}
-		//	var existingCourseAssignTeacher = _context.CourseAssignmentTeachers.FirstOrDefault(d => d.Id == id);
-		//	{
-		//		if (existingCourseAssignTeacher == null)
-		//		{
-		//			return NotFound();
-		//		}
-		//		existingCourseAssignTeacher.AssignedCredit += updateCourseAssignTeacher.AssignedCredit;
-		//		existingCourseAssignTeacher.RemainingCredit += updateCourseAssignTeacher.RemainingCredit;
-		//		existingCourseAssignTeacher.DepartmentId = updateCourseAssignTeacher.DepartmentId;
+		
 
 
 
-		//		_context.SaveChanges();
-		//		return Ok();
-		//	}
 
-
-		//}
 
 		private bool CourseAssignTeacherAvailable(int id)
 		{
@@ -180,13 +159,14 @@ namespace UniversityCourseManagement.Controllers
 			var courseAssignteacher = await _context.CourseAssignmentTeachers.Where(x => x.Id == id).FirstAsync();
 			if (courseAssignteacher == null)
 			{
-				return NotFound();
+				return NotFound(new { ststusCode = 204, message = " Teacher Assigned Deleted Failed" });
 			}
-			_context.CourseAssignmentTeachers.Remove(courseAssignteacher);
+			courseAssignteacher.IsDeleted = true;
+			_context.CourseAssignmentTeachers.Update(courseAssignteacher);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 200, message = " Teacher Assigned Deleted SuccessFully" });
 		}
 
 

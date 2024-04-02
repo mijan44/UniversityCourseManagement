@@ -11,7 +11,8 @@
 		//public virtual Department Department { get; set; }
 		public string RegistrationNumber { get; set; }
         public  Guid DepartmentId { get; set; }
+		public bool IsDeleted { get; set; } = false;
 
 
-    }
+	}
 }

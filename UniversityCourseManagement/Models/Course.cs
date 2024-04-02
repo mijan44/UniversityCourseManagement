@@ -23,5 +23,6 @@ namespace UniversityCourseManagement.Models
 		//public virtual Department Department { get; set; }
 	
 		public int Semester { get; set; }
+		public bool IsDeleted { get; set; } = false;
 	}
 }

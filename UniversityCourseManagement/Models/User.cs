@@ -8,5 +8,6 @@
         public string UserEmail { get; set; }
         public string UserContact { get; set; }
         public string UserPassword { get; set; }
-    }
+		public bool IsDeleted { get; set; } = false;
+	}
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniversityCourseManagement.Data;
+using UniversityCourseManagement.Helpers;
 using UniversityCourseManagement.Models;
 using UniversityCourseManagement.ViewModel;
 
@@ -30,6 +31,7 @@ namespace UniversityCourseManagement.Controllers
 		[HttpGet]
 		public async Task<ActionResult<TeacherViewModel>> GetTeacher() 
 		{
+			
 			var result = from t in _context.Teachers
 						 join d in _context.Departments on t.DepartmentId equals d.Id
 						 select new
@@ -42,10 +44,11 @@ namespace UniversityCourseManagement.Controllers
 							 DepartmentId = d.Id,
 							 DepartmentName = d.Name,
 							 t.Id,
-							 t.CreditToBeTaken
+							 t.CreditToBeTaken,
+							 t.IsDeleted
 
 						 };
-			return Ok(result);
+			return Ok(result.Where(x=>!x.IsDeleted));
 		}
 
 
@@ -53,12 +56,16 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<Teacher>> PostTeacher(Teacher teacherRequest)
 		{
-			var existTeacher = _context.Teachers.FirstOrDefault(x=>x.TeacherEmail == teacherRequest.TeacherEmail || x.ContactNo == teacherRequest.ContactNo);
+			var existTeacher = _context.Teachers.FirstOrDefault(x=>x.TeacherEmail == teacherRequest.TeacherEmail && x.ContactNo == teacherRequest.ContactNo && !x.IsDeleted);
 
 			if (existTeacher == null)
 			{
 				if (teacherRequest.Id == null || teacherRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
+					Validation validation = new Validation();
+					if(validation.CheckSpecialChar(teacherRequest.TeacherName))
+					return Ok(new { ststusCode = 200, message = teacherRequest.TeacherName + " - Special Character Not Allowed" });
+					
 					var teacher = new Teacher();
 					teacher.Id = Guid.NewGuid();
 					teacher.TeacherName = teacherRequest.TeacherName;
@@ -72,33 +79,32 @@ namespace UniversityCourseManagement.Controllers
 
 					_context.Teachers.Add(teacher);
 					await _context.SaveChangesAsync();
+					return Ok(new { ststusCode = 200, message = teacher.TeacherName + " Teacher Saved SuccessFully" });
 
 				}
-				else
-				{
-					var existingTeacher = _context.Teachers.FirstOrDefault(t => t.Id == teacherRequest.Id);
-					if (existingTeacher == null)
-					{
-						return NotFound();
-					}
-
-					existingTeacher.TeacherName = teacherRequest.TeacherName;
-					existingTeacher.TeacherAddress = teacherRequest.TeacherAddress;
-					existingTeacher.TeacherEmail = teacherRequest.TeacherEmail;
-					existingTeacher.ContactNo = teacherRequest.ContactNo;
-					existingTeacher.Designation = teacherRequest.Designation;
-					existingTeacher.CreditToBeTaken = teacherRequest.CreditToBeTaken;
-
-					_context.SaveChanges();
-
-				}
-
+				
 
 			}
-			
+			else
+			{
+				var existingTeacher = _context.Teachers.FirstOrDefault(t => t.Id == teacherRequest.Id);
+				
+
+				existingTeacher.TeacherName = teacherRequest.TeacherName;
+				existingTeacher.TeacherAddress = teacherRequest.TeacherAddress;
+				existingTeacher.TeacherEmail = teacherRequest.TeacherEmail;
+				existingTeacher.ContactNo = teacherRequest.ContactNo;
+				existingTeacher.Designation = teacherRequest.Designation;
+				existingTeacher.CreditToBeTaken = teacherRequest.CreditToBeTaken;
+
+				_context.SaveChanges();
+				return Ok(new { ststusCode = 204, message = existingTeacher.TeacherName + " Teacher Updated SuccessFully" });
+
+			}
 
 
-			return Ok();
+
+			return Ok("Already Exist Teacher");
 		}
 
 
@@ -115,13 +121,14 @@ namespace UniversityCourseManagement.Controllers
 			var teacher = await _context.Teachers.Where(x => x.Id == id).FirstAsync();
 			if (teacher == null)
 			{
-				return NotFound();
+				return NotFound(new { ststusCode = 204, message =  " Teacher Deleted Failed" });
 			}
-			_context.Teachers.Remove(teacher);
+			teacher.IsDeleted = true;
+			_context.Teachers.Update(teacher);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 200, message =  " Teacher Deleted SuccessFully" });
 		}
 
 

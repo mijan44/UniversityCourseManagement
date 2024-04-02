@@ -86,7 +86,7 @@ namespace UniversityCourseManagement.Helpers
 			var tokenDescriptor = new SecurityTokenDescriptor
 			{
 				Subject = identity,
-				Expires = DateTime.Now.AddDays(1),
+				Expires = DateTime.Now.AddMinutes(2),
 				SigningCredentials = credential
 			};
 

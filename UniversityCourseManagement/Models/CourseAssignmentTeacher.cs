@@ -9,9 +9,7 @@
 		
 		public decimal AssignedCredit { get; set; }
 		public decimal RemainingCredit { get; set; }
-		//public string CourseCode { get; set; }
-		//public string CourseName { get; set; }
-		//public string CourseCredit { get; set; }
-		
+		public bool IsDeleted { get; set; } = false;
+
 	}
 }

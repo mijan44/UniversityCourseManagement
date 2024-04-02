@@ -11,5 +11,8 @@
 		public Guid CourseId { get; set; }
         public string  CourseName { get; set; }
         public string RegistrationNumber { get; set; }
+        public bool IsDeleted { get; set; }
+
+      
     }
 }

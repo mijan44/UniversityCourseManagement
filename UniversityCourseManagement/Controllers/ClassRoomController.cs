@@ -6,6 +6,7 @@ using System.Globalization;
 using UniversityCourseManagement.Data;
 using UniversityCourseManagement.Models;
 using UniversityCourseManagement.ViewModel;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace UniversityCourseManagement.Controllers
 {
@@ -35,9 +36,10 @@ namespace UniversityCourseManagement.Controllers
 							DepartmentId = d.Id,
 							cr.From,
 							cr.To,
+							cr.IsDeleted,
 							ScheduleInfo = "R. No :"+ cr.RoomNo + ","+ cr.Day.Substring(0,3)+","+ string.Format("{0:hh:mm tt}", cr.From) + " - "+ string.Format("{0:hh:mm tt}", cr.To) + ";"
 
-						}).Where(x=>x.DepartmentId==new Guid(DepartmentId)).ToList();
+						}).Where(x=>x.DepartmentId==new Guid(DepartmentId) && !x.IsDeleted).ToList();
 
 			if (query.Any())
 			{
@@ -93,7 +95,7 @@ namespace UniversityCourseManagement.Controllers
 		public async Task<ActionResult<ClassRoomViewModel>> GetAllClass()
 		{
 			List <ClassRoomViewModel> classRoomList = new List <ClassRoomViewModel> ();
-			var result = await _context.ClassRooms.ToListAsync();
+			var result = await _context.ClassRooms.Where(x=>!x.IsDeleted).ToListAsync();
 			if (result.Count > 0)
 			{
 				for (int i = 0; i < result.Count; i++)
@@ -114,7 +116,23 @@ namespace UniversityCourseManagement.Controllers
 			return Ok(classRoomList);
 		}
 
+		private async Task <ActionResult> SaveClassRoom(ClassRoomViewModel requestClassRoom)
+		{
+			DateTime fromDate = Convert.ToDateTime(requestClassRoom.From);
+			DateTime toDate = Convert.ToDateTime(requestClassRoom.To);
+			var classRoom = new ClassRoom();
+			classRoom.Id = requestClassRoom.Id;
+			classRoom.RoomNo = requestClassRoom.RoomNo;
+			classRoom.Day = requestClassRoom.Day;
+			classRoom.From = fromDate;
+			classRoom.To = toDate;
+			classRoom.CourseId = requestClassRoom.CourseId;
+			classRoom.DepartmentId = requestClassRoom.DepartmentId;
 
+			_context.ClassRooms.Add(classRoom);
+			await _context.SaveChangesAsync();
+			return Ok(new { ststusCode = 200, message = classRoom.RoomNo + " Class Room Saved SuccessFully" });
+		}
 		[HttpPost]
 		public async Task<ActionResult<ClassRoom>>PostClassRoom (ClassRoomViewModel requestClassRoom)
 		{
@@ -122,48 +140,41 @@ namespace UniversityCourseManagement.Controllers
 			DateTime toDate = Convert.ToDateTime(requestClassRoom.To);
 			if (requestClassRoom.Id == null || requestClassRoom.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 			{
-				var existRoom = _context.ClassRooms.Where(x => x.RoomNo == requestClassRoom.RoomNo && x.Day == requestClassRoom.Day && (x.From >= fromDate || x.To<= toDate)).FirstOrDefault();
-				if (existRoom == null)
-				{ 
-				var classRoom = new ClassRoom();
-				classRoom.Id = requestClassRoom.Id;
-				classRoom.RoomNo = requestClassRoom.RoomNo;
-				classRoom.Day = requestClassRoom.Day;
-				classRoom.From = fromDate;
-				classRoom.To = toDate;
-				classRoom.CourseId = requestClassRoom.CourseId;
-				classRoom.DepartmentId = requestClassRoom.DepartmentId;
+				var maxClassTime = _context.ClassRooms.Where(x => x.RoomNo == requestClassRoom.RoomNo && x.Day == requestClassRoom.Day && !x.IsDeleted).Max(x => x.To);
+				if (maxClassTime != null)
+				{
+					var existRoom = fromDate >= maxClassTime; //_context.ClassRooms.Where(x => x.RoomNo == requestClassRoom.RoomNo && x.Day == requestClassRoom.Day && !x.IsDeleted && (x.From >= fromDate || x.To <= toDate)).FirstOrDefault();
+					if (existRoom )
+					{
+						SaveClassRoom(requestClassRoom);
 
-					_context.ClassRooms.Add(classRoom);
-					await _context.SaveChangesAsync();
-
-
+					}
+					else
+					{
+						return Ok("Already Exist Time");
+					}
 				}
 				else
 				{
-					return Ok("Already Exist Time");
+					SaveClassRoom(requestClassRoom);
 				}
 
 
-				
-				
-				
 
 			}
 			else
 			{
 				var existingClassRoom = _context.ClassRooms.FirstOrDefault(x=>x.Id == requestClassRoom.Id);
-				if (existingClassRoom == null)
+				
 				{
-					return  NotFound();
-
+					
 					existingClassRoom.RoomNo = requestClassRoom.RoomNo;
 					existingClassRoom.Day = requestClassRoom.Day;
 					existingClassRoom.From = fromDate;
 					existingClassRoom.To = toDate;
 
 					_context.SaveChanges();
-
+					return Ok(new { ststusCode = 200, message = existingClassRoom.RoomNo + " Class Room Updated SuccessFully" });
 				}
 
 			}
@@ -186,13 +197,14 @@ namespace UniversityCourseManagement.Controllers
 			var classRoom = await _context.ClassRooms.Where(x => x.Id == id).FirstAsync();
 			if (classRoom == null)
 			{
-				return NotFound();
+				return NotFound(new { ststusCode = 204, message = " Class Room Deleted Failed" });
 			}
-			_context.ClassRooms.Remove(classRoom);
+			classRoom.IsDeleted = true;
+			_context.ClassRooms.Update(classRoom);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 200, message = "  Class Room Deleted SuccessFully" });
 		}
 
 
@@ -201,13 +213,17 @@ namespace UniversityCourseManagement.Controllers
 		public async Task<IActionResult> DeleteAllClassRoom()
 		{
 
-			var classRoom = await _context.ClassRooms.FirstAsync();
+			var classRoom = await _context.ClassRooms.ToListAsync();
+			foreach (var room in classRoom)
+			{
+				room.IsDeleted = true;
+			}
 			
-			_context.ClassRooms.Remove(classRoom);
 
 			await _context.SaveChangesAsync();
+			return Ok(new { ststusCode = 200, message = "  Class Room Unallocated SuccessFully" });
 
-			return Ok();
+			
 		}
 
 

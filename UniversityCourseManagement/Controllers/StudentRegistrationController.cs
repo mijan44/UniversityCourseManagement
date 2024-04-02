@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UniversityCourseManagement.Data;
+using UniversityCourseManagement.Helpers;
 using UniversityCourseManagement.Models;
 using UniversityCourseManagement.ViewModel;
 
@@ -42,12 +43,13 @@ namespace UniversityCourseManagement.Controllers
 									   StudentAddress = rs.StudentAddress,
 									   RegistrationNumber = rs.RegistrationNumber,
 									   DepartmentName = d.Name,
-									   DepartmentId = d.Id
+									   DepartmentId = d.Id,
+									   rs.IsDeleted
 								   };
 
 			// 'dbContext' is the instance of your Entity Framework DbContext
 
-			return Ok(result);
+			return Ok(result.Where(x=>!x.IsDeleted));
 		}
 
 
@@ -62,11 +64,15 @@ namespace UniversityCourseManagement.Controllers
 		[HttpPost]
 		public async Task<ActionResult<RegisterStudent>>PostStudent(RegisterStudent studentRequest)
 		{
-			var existStudent = _context.RegisterStudents.FirstOrDefault(x=>x.StudentEmail==studentRequest.StudentEmail || x.StudentContactNo==studentRequest.StudentContactNo);
+			var existStudent = _context.RegisterStudents.FirstOrDefault(x=>x.StudentEmail==studentRequest.StudentEmail && x.StudentContactNo==studentRequest.StudentContactNo && !x.IsDeleted);
 			if (existStudent == null)
 			{
 				if (studentRequest.Id == null || studentRequest.Id == new Guid("00000000-0000-0000-0000-000000000000"))
 				{
+					Validation validation = new Validation();
+					if(validation.CheckSpecialChar(studentRequest.StudentName))
+					return Ok(new { ststusCode = 200, message = studentRequest.StudentName + " - Special Character Not Allowed" });
+
 					string registrationNumber;
 					string departmentCode;
 					int slNo = 0;
@@ -98,67 +104,37 @@ namespace UniversityCourseManagement.Controllers
 
 					_context.RegisterStudents.Add(student);
 					await _context.SaveChangesAsync();
-
-				}
-				else
-				{
-					var existingStudent = _context.RegisterStudents.FirstOrDefault(d => d.Id == studentRequest.Id);
-					{
-						if (existingStudent == null)
-						{
-							return NotFound();
-						}
-
-						existingStudent.StudentName = studentRequest.StudentName;
-						existingStudent.StudentEmail = studentRequest.StudentEmail;
-						existingStudent.StudentContactNo = studentRequest.StudentContactNo;
-						existingStudent.StudentAddress = studentRequest.StudentAddress;
-						existingStudent.RegistrationNumber = studentRequest.RegistrationNumber;
-
-
-						_context.SaveChanges();
-
-					}
+					return Ok(new { ststusCode = 200, message = student.StudentName + " Student Saved SuccessFully" });
 
 				}
 
 			}
+			else
+			{
+				var existingStudent = _context.RegisterStudents.FirstOrDefault(d => d.Id == studentRequest.Id);
+				{
+					
+					existingStudent.StudentName = studentRequest.StudentName;
+					existingStudent.StudentEmail = studentRequest.StudentEmail;
+					existingStudent.StudentContactNo = studentRequest.StudentContactNo;
+					existingStudent.StudentAddress = studentRequest.StudentAddress;
+					existingStudent.RegistrationNumber = studentRequest.RegistrationNumber;
 
 
+					_context.SaveChanges();
+					return Ok(new { ststusCode = 204, message = existingStudent.StudentName + " Student Updated SuccessFully" });
 
+				}
 
-
-			return Ok();
+			}
+			return Ok("Already Exist Student");
 			
 
 		}
 
-		//[HttpPut]
-		//public IActionResult UpdateRegisterStudent (Guid id, RegisterStudent updateRegisterStudent)
-		//{
-		//	if(!ModelState.IsValid)
-		//	{
-		//		return BadRequest(ModelState);
-		//	}
-		//	var existingStudent = _context.RegisterStudents.FirstOrDefault(d => d.Id == id);
-		//	{
-		//		if (existingStudent == null)
-		//		{
-		//			return NotFound();
-		//		}
-
-		//		existingStudent.StudentName = updateRegisterStudent.StudentName;
-		//		existingStudent.StudentEmail = updateRegisterStudent.StudentEmail;
-		//		existingStudent.StudentContactNo= updateRegisterStudent.StudentContactNo;
-		//		existingStudent.StudentAddress = updateRegisterStudent.StudentAddress;
-		//		existingStudent.RegistrationNumber = updateRegisterStudent.RegistrationNumber;
 
 
-		//		_context.SaveChanges();
-		//		return Ok();
-		//	}
-			
-		//}
+		
 
 		private bool StudentAvailable(int id)
 		{
@@ -172,13 +148,14 @@ namespace UniversityCourseManagement.Controllers
 			var student = await _context.RegisterStudents.Where(x => x.Id == id).FirstAsync();
 			if (student == null)
 			{
-				return NotFound();
+				return NotFound(new { ststusCode = 204, message = " Student Deleted Failed" });
 			}
-			_context.RegisterStudents.Remove(student);
+			student.IsDeleted = true;
+			_context.RegisterStudents.Update(student);
 
 			await _context.SaveChangesAsync();
 
-			return Ok();
+			return Ok(new { ststusCode = 200, message = student.StudentName + " Student Deleted SuccessFully" });
 		}
 
 

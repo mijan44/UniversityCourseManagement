@@ -10,8 +10,7 @@
 		public DateTime To { get; set; }
 		public Guid CourseId { get; set; }
 		public Guid DepartmentId { get; set; }
-		//public virtual Course Course { get; set; }
-		//public virtual Department Department { get; set; }
-		//public Guid DepartmentId { get; set; }
+		public bool IsDeleted { get; set; }=false;
+
 	}
 }

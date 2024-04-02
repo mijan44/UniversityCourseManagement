@@ -6,6 +6,7 @@
 		public DateTime EnrollmentDate { get; set; }
 		public Guid CourseId { get; set; }
 		public Guid StudentId { get; set; }
-		
+		public bool IsDeleted { get; set; } = false;
+
 	}
 }
